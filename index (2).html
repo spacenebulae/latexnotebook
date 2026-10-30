@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Text & LaTeX Editor</title>
+    <!-- Load KaTeX CSS and JS from working CDN links -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.css" integrity="sha384-3rdsX6e5mueWyoweR9NIVmtEsUkokpBT/0ALqKKIBMr9j4qhHkaIkAcGgsE6uVlp" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.js" integrity="sha384-QFFtAGzvvj+bfgCGxXJlNZZR1nXEZgvG8tDLCCY1F19xl20WlfTYgguB4VcNdxYk" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/contrib/auto-render.min.js" integrity="sha384-bjyGPfbij8/NDKJhSGZNP/khQVgtHUE5exjm4Ydllo42FwIgYsdLO2lXGmRBf5Mz" crossorigin="anonymous"
+    onload="renderMathInElement(document.body);"></script>
+    <!-- Fonts (added): Nunito ExtraBold is the default font for the editor and other
+         fields; JetBrains Mono is one of the selectable choices in the font picker -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+
+    <!-- Theme + font bootstrap (added): applies the saved choices before first paint
+         so the page never flashes in the wrong theme -->
+    <script>
+        (function () {
+            var FONTS = {
+                nunito:    { label: 'Nunito ExtraBold',  family: "'Nunito', Verdana, sans-serif", weight: '800' },
+                verdana:   { label: 'Verdana',           family: 'Verdana, Geneva, sans-serif', weight: '400' },
+                helvetica: { label: 'Helvetica',         family: 'Helvetica, Arial, sans-serif', weight: '400' },
+                jetbrains: { label: 'JetBrains Mono',    family: "'JetBrains Mono', Consolas, monospace", weight: '400' },
+                calibri:   { label: 'Calibri',           family: "Calibri, Carlito, 'Segoe UI', sans-serif", weight: '400' },
+                arial:     { label: 'Arial',             family: 'Arial, Helvetica, sans-serif', weight: '400' },
+                consolas:  { label: 'Consolas',          family: "Consolas, 'Liberation Mono', 'Courier New', monospace", weight: '400' }
+            };
+            window.LATEX_EDITOR_FONTS = FONTS;
+            window.applyEditorFont = function (key) {
+                var f = FONTS[key] || FONTS.nunito;
+                document.documentElement.style.setProperty('--app-font', f.family);
+                document.documentElement.style.setProperty('--app-font-weight', f.weight);
+            };
+            try {
+                var theme = localStorage.getItem('latex_editor_theme');
+                if (theme !== 'light' && theme !== 'dark') {
+                    // No saved choice yet: follow the system preference
+                    theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+                }
+                document.documentElement.setAttribute('data-theme', theme);
+                var fontKey = localStorage.getItem('latex_editor_font');
+                window.applyEditorFont(FONTS[fontKey] ? fontKey : 'nunito');
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+                window.applyEditorFont('nunito');
+            }
+        })();
+    </script>
+    <style>
+        /* ---- Theme variables (added): light palette + dark override ---- */
+        :root {
+            color-scheme: light;
+            --bg: #ffffff;
+            --text: #333333;
+            --editor-bg: #fafafa;
+            --preview-bg: #ffffff;
+            --border: #dddddd;
+            --toolbar-bg: #f5f5f5;
+            --btn-bg: #ffffff;
+            --btn-border: #cccccc;
+            --btn-hover-bg: #efefef;
+            --btn-hover-border: #bbbbbb;
+            --btn-text: #333333;
+            --hint-text: #999999;
+            --status-text: #888888;
+            --status-bg: rgba(255, 255, 255, 0.8);
+            --placeholder: #aaaaaa;
+            /* Font used by the editor and other fields (NOT the render); set from JS */
+            --app-font: 'Nunito', Verdana, sans-serif;
+            --app-font-weight: 800;
+        }
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --bg: #1e1e1e;
+            --text: #d4d4d4;
+            --editor-bg: #1e1e1e;
+            --preview-bg: #212121;
+            --border: #3a3a3a;
+            --toolbar-bg: #252525;
+            --btn-bg: #2d2d2d;
+            --btn-border: #484848;
+            --btn-hover-bg: #383838;
+            --btn-hover-border: #5c5c5c;
+            --btn-text: #d4d4d4;
+            --hint-text: #808080;
+            --status-text: #9a9a9a;
+            --status-bg: rgba(30, 30, 30, 0.85);
+            --placeholder: #6a6a6a;
+        }
+        body {
+            font-family: var(--app-font);
+            font-weight: var(--app-font-weight);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            color: var(--text);
+            background: var(--bg);
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+        .main {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+        .pane {
+            flex: 1;
+            height: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        textarea {
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            border: none;
+            padding: 20px;
+            font-size: 16px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            background-color: var(--editor-bg);
+            color: var(--text);
+            font-family: var(--app-font);
+            font-weight: var(--app-font-weight);
+            box-sizing: border-box;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+        textarea::placeholder {
+            color: var(--placeholder);
+            opacity: 1;
+        }
+        #preview {
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 1px solid var(--border);
+            white-space: pre-wrap; /* Preserves line breaks */
+            font-size: 16px;
+            line-height: 1.6;
+            flex: 1;
+            min-height: 0;
+            box-sizing: border-box;
+            background: var(--preview-bg);
+            color: var(--text);
+            /* The render keeps its own neutral font, independent of the editor font */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-weight: 400;
+            transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+        }
+        /* ---- Toolbar (now spans the top of the app): export, font picker, theme toggle ---- */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--toolbar-bg);
+            flex: none;
+            font-family: var(--app-font);
+            font-weight: var(--app-font-weight);
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+        }
+        .toolbar button {
+            font-family: var(--app-font);
+            font-weight: var(--app-font-weight);
+            font-size: 13px;
+            padding: 6px 14px;
+            border: 1px solid var(--btn-border);
+            border-radius: 6px;
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.25s ease;
+        }
+        .toolbar button:hover:not(:disabled) {
+            background: var(--btn-hover-bg);
+            border-color: var(--btn-hover-border);
+        }
+        .toolbar button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+        .kbd-hint {
+            font-size: 12px;
+            color: var(--hint-text);
+        }
+        .toolbar .spacer {
+            flex: 1;
+        }
+        /* ---- Font picker (added) ---- */
+        .font-label {
+            font-size: 13px;
+            color: var(--hint-text);
+        }
+        select {
+            font-family: var(--app-font);
+            font-weight: var(--app-font-weight);
+            font-size: 13px;
+            padding: 5px 8px;
+            border: 1px solid var(--btn-border);
+            border-radius: 6px;
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            cursor: pointer;
+            max-width: 220px;
+        }
+        select:hover {
+            border-color: var(--btn-hover-border);
+        }
+        /* ---- Theme toggle (added): small square icon button ---- */
+        #themeToggle {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #themeToggle svg {
+            display: block;
+        }
+        .status {
+            position: fixed;
+            bottom: 10px;
+            right: 20px;
+            font-size: 12px;
+            color: var(--status-text);
+            background: var(--status-bg);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: var(--app-font);
+            font-weight: var(--app-font-weight);
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top toolbar (moved up so it spans the whole app): export, font picker, theme toggle -->
+    <div class="toolbar">
+        <!-- Export button: click or press Ctrl+S to save every equation as its own PNG -->
+        <button id="exportBtn" type="button" title="Export every rendered equation as a separate PNG file">Export equations as PNG</button>
+        <span class="kbd-hint">or press Ctrl&nbsp;+&nbsp;S</span>
+        <span class="spacer"></span>
+        <!-- Font picker (added): font for the editor and other fields, not the rendered preview -->
+        <label class="font-label" for="fontSelect">Font</label>
+        <select id="fontSelect" title="Font for the editor and other fields (the rendered preview is not affected)"></select>
+        <!-- Theme toggle (added): small button that switches light/dark mode, choice is remembered -->
+        <button id="themeToggle" type="button" title="Switch to dark mode" aria-label="Switch to dark mode">
+            <svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            <svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+    </div>
+
+    <div class="main">
+        <!-- Left side: Input -->
+        <div class="pane">
+            <textarea id="editor" placeholder="Type plain text here. Use $...$ for inline math and $$...$$ for block math."></textarea>
+        </div>
+
+        <!-- Right side: Live Preview -->
+        <div class="pane">
+            <div id="preview"></div>
+        </div>
+    </div>
+    <div class="status" id="status">Saved</div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const status = document.getElementById('status');
+        const exportBtn = document.getElementById('exportBtn');
+        let saveTimeout;
+
+        /* ============================================================
+           Theme toggle & font picker (added)
+           ============================================================ */
+        const fontSelect = document.getElementById('fontSelect');
+        const themeToggle = document.getElementById('themeToggle');
+        const iconMoon = document.getElementById('iconMoon');
+        const iconSun = document.getElementById('iconSun');
+
+        // ---- Font picker: changes the font of the editor and the other fields.
+        //      The rendered preview is deliberately left untouched. ----
+        const FONTS = window.LATEX_EDITOR_FONTS;
+        Object.keys(FONTS).forEach(function (key) {
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = FONTS[key].label;
+            // Show every choice in its own font inside the dropdown
+            opt.style.fontFamily = FONTS[key].family;
+            opt.style.fontWeight = FONTS[key].weight;
+            fontSelect.appendChild(opt);
+        });
+        let savedFont = null;
+        try { savedFont = localStorage.getItem('latex_editor_font'); } catch (e) {}
+        fontSelect.value = FONTS[savedFont] ? savedFont : 'nunito';
+        window.applyEditorFont(fontSelect.value); // keep in sync with the head bootstrap
+        fontSelect.addEventListener('change', function () {
+            window.applyEditorFont(fontSelect.value);
+            try { localStorage.setItem('latex_editor_font', fontSelect.value); } catch (e) {}
+        });
+
+        // ---- Theme toggle: switches light/dark mode, choice is remembered ----
+        function currentTheme() {
+            return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        }
+        function updateThemeButton() {
+            const dark = currentTheme() === 'dark';
+            iconMoon.style.display = dark ? 'none' : 'block';
+            iconSun.style.display = dark ? 'block' : 'none';
+            const label = dark ? 'Switch to light mode' : 'Switch to dark mode';
+            themeToggle.title = label;
+            themeToggle.setAttribute('aria-label', label);
+            themeToggle.setAttribute('aria-pressed', String(dark));
+        }
+        themeToggle.addEventListener('click', function () {
+            const next = currentTheme() === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            try { localStorage.setItem('latex_editor_theme', next); } catch (e) {}
+            updateThemeButton();
+        });
+        updateThemeButton();
+
+        // Load saved content on startup (or leave blank if none)
+        const savedContent = localStorage.getItem('latex_editor_content');
+        if (savedContent) {
+            editor.value = savedContent;
+        } else {
+            editor.value = ""; // Removed greeting text
+        }
+
+        // Render function
+        function updatePreview() {
+            const text = editor.value;
+
+            // Use innerHTML instead of textContent so KaTeX can inject HTML nodes
+            preview.innerHTML = text;
+
+            // Tell KaTeX to find and render math delimiters
+            // (guarded so the very first render before KaTeX finishes loading doesn't throw)
+            if (typeof renderMathInElement === 'function') {
+                renderMathInElement(preview, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+
+            // Handle auto-save with a tiny debounce so it doesn't lag while typing
+            status.textContent = "Typing...";
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                localStorage.setItem('latex_editor_content', text);
+                status.textContent = "Saved";
+            }, 300);
+        }
+
+        // Listen for typing events
+        editor.addEventListener('input', updatePreview);
+
+        // Initial render
+        updatePreview();
+
+        // Once KaTeX finishes loading, re-render so inline $...$ math from a saved
+        // draft is rendered too (the auto-render onload pass only handles $$..$$,
+        // which would otherwise leave inline math unrendered until the next keystroke)
+        window.addEventListener('load', updatePreview);
+
+        /* ============================================================
+           PNG export (added)
+           Exports every rendered equation (.katex element) in the
+           preview as an individual PNG file.
+
+           How it works: each equation is cloned into an SVG
+           <foreignObject> together with the full KaTeX stylesheet
+           (fonts inlined as data: URIs, since SVG images cannot load
+           external resources), rasterized by the browser's own engine
+           onto a canvas, and saved via a download link.
+           ============================================================ */
+
+        // --- tweak these three constants if you want different output ---
+        const EXPORT_SCALE = 2;         // 2 = retina-crisp (set to 1 for exact CSS-pixel dimensions)
+        const EXPORT_PADDING = 32;      // white margin (CSS px) around each equation
+        const EXPORT_MIN_WIDTH = 600;   // minimum canvas width (CSS px) ~ typical notebook content width
+
+        let exporting = false;
+        let katexCssPromise = null;
+
+        function arrayBufferToBase64(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            const CHUNK = 0x8000;
+            for (let i = 0; i < bytes.length; i += CHUNK) {
+                binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+            }
+            return btoa(binary);
+        }
+
+        // Fetch katex.min.css once and inline every woff2 font as a data: URI
+        function getKatexCssWithFonts() {
+            if (!katexCssPromise) {
+                katexCssPromise = (async () => {
+                    const version = (window.katex && window.katex.version) || '0.19.0';
+                    const cssUrl = 'https://cdn.jsdelivr.net/npm/katex@' + version + '/dist/katex.min.css';
+                    const resp = await fetch(cssUrl, { mode: 'cors' });
+                    if (!resp.ok) throw new Error('Failed to fetch KaTeX CSS (' + resp.status + ')');
+                    let css = await resp.text();
+
+                    const woff2Re = /url\((['"]?)([^'")]+?\.woff2)\1\)/g;
+                    const urls = [...new Set([...css.matchAll(woff2Re)].map(m => m[2]))];
+
+                    const pairs = await Promise.all(urls.map(async u => {
+                        const fontResp = await fetch(new URL(u, cssUrl).href, { mode: 'cors' });
+                        if (!fontResp.ok) throw new Error('Failed to fetch font ' + u);
+                        const buf = await fontResp.arrayBuffer();
+                        return [u, 'data:font/woff2;base64,' + arrayBufferToBase64(buf)];
+                    }));
+                    const embedded = Object.fromEntries(pairs);
+
+                    css = css.replace(woff2Re, (m, q, u) => 'url("' + embedded[u] + '")');
+                    return css;
+                })().catch(err => {
+                    katexCssPromise = null; // allow a retry on the next attempt
+                    throw err;
+                });
+            }
+            return katexCssPromise;
+        }
+
+        // Measure the natural (tight) size of an equation. Display-mode roots
+        // are display:block in the preview, so measure an inline clone instead.
+        function measureEquation(el) {
+            const measure = document.createElement('div');
+            measure.style.cssText = 'position:absolute;left:-99999px;top:0;visibility:hidden;'
+                + 'display:inline-block;white-space:nowrap;font-size:16px;margin:0;padding:0;';
+            measure.appendChild(el.cloneNode(true));
+            document.body.appendChild(measure);
+            const rect = measure.getBoundingClientRect();
+            const w = Math.ceil(rect.width);
+            const h = Math.ceil(rect.height);
+            measure.remove();
+            return { w: w, h: h };
+        }
+
+        // Rasterize one .katex element to a PNG data URL (pixel-identical to the preview)
+        async function renderEquationToPng(el) {
+            const size = measureEquation(el);
+            const W = Math.max(EXPORT_MIN_WIDTH, size.w + EXPORT_PADDING * 2);
+            const H = size.h + EXPORT_PADDING * 2;
+
+            const katexCss = await getKatexCssWithFonts();
+
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'width:' + W + 'px;height:' + H + 'px;box-sizing:border-box;'
+                + 'padding:' + EXPORT_PADDING + 'px;background:#ffffff;margin:0;'
+                + 'display:flex;align-items:center;justify-content:center;'
+                + 'white-space:nowrap;font-size:16px;color:#000;';
+
+            const styleEl = document.createElement('style');
+            styleEl.textContent = katexCss;
+            wrapper.appendChild(styleEl);
+            wrapper.appendChild(el.cloneNode(true));
+
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '">'
+                + '<foreignObject x="0" y="0" width="100%" height="100%">'
+                + new XMLSerializer().serializeToString(wrapper)
+                + '</foreignObject></svg>';
+
+            const img = new Image();
+            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = () => reject(new Error('could not rasterize equation'));
+            });
+
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(W * EXPORT_SCALE);
+            canvas.height = Math.round(H * EXPORT_SCALE);
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            return {
+                dataUrl: canvas.toDataURL('image/png'),
+                width: canvas.width,
+                height: canvas.height
+            };
+        }
+
+        // Renders every equation in the preview; returns [{name, dataUrl, width, height}]
+        async function collectEquationPngs(onProgress) {
+            const els = Array.from(preview.querySelectorAll('.katex'));
+            const out = [];
+            for (let i = 0; i < els.length; i++) {
+                if (onProgress) onProgress(i + 1, els.length);
+                const png = await renderEquationToPng(els[i]);
+                png.name = 'equation-' + String(i + 1).padStart(3, '0') + '.png';
+                out.push(png);
+            }
+            return out;
+        }
+
+        async function exportEquations() {
+            if (exporting) return;
+            const count = preview.querySelectorAll('.katex').length;
+            if (!count) {
+                status.textContent = 'No equations to export';
+                return;
+            }
+            exporting = true;
+            exportBtn.disabled = true;
+            try {
+                status.textContent = 'Preparing fonts…';
+                const pngs = await collectEquationPngs((i, n) => {
+                    status.textContent = 'Exporting ' + i + '/' + n + '…';
+                });
+                for (let i = 0; i < pngs.length; i++) {
+                    const a = document.createElement('a');
+                    a.href = pngs[i].dataUrl;
+                    a.download = pngs[i].name;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    if (i < pngs.length - 1) {
+                        await new Promise(r => setTimeout(r, 300));
+                    }
+                }
+                status.textContent = 'Exported ' + pngs.length + ' PNG' + (pngs.length === 1 ? '' : 's');
+            } catch (err) {
+                console.error('PNG export failed:', err);
+                status.textContent = 'Export failed: ' + err.message;
+            } finally {
+                exporting = false;
+                exportBtn.disabled = false;
+            }
+        }
+
+        exportBtn.addEventListener('click', exportEquations);
+
+        // Ctrl+S (Windows/Linux) or Cmd+S (Mac) triggers the export
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                exportEquations();
+            }
+        });
+    </script>
+</body>
+</html>
