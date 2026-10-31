@@ -245,8 +245,8 @@
 
     <!-- Top toolbar (moved up so it spans the whole app): export, font picker, theme toggle -->
     <div class="toolbar">
-        <!-- Export button: click or press Ctrl+S to save every equation as its own PNG -->
-        <button id="exportBtn" type="button" title="Export every rendered equation as a separate PNG file">Export equations as PNG</button>
+        <!-- Export button: click or press Ctrl+S to save the entire preview as one PNG -->
+        <button id="exportBtn" type="button" title="Export all text and rendered equations in the right preview as one high-resolution PNG">Export preview as PNG</button>
         <span class="kbd-hint">or press Ctrl&nbsp;+&nbsp;S</span>
         <span class="spacer"></span>
         <!-- Font picker (added): font for the editor and other fields, not the rendered preview -->
@@ -377,184 +377,192 @@
         window.addEventListener('load', updatePreview);
 
         /* ============================================================
-           PNG export (added)
-           Exports every rendered equation (.katex element) in the
-           preview as an individual PNG file.
-
-           How it works: each equation is cloned into an SVG
-           <foreignObject> together with the full KaTeX stylesheet
-           (fonts inlined as data: URIs, since SVG images cannot load
-           external resources), rasterized by the browser's own engine
-           onto a canvas, and saved via a download link.
+           Full-preview PNG export
+           - Exports normal text and rendered equations together.
+           - Captures all preview content, including content below the
+             visible scroll area.
+           - Adjusts resolution to fit conservative browser canvas limits.
            ============================================================ */
 
-        // --- tweak these three constants if you want different output ---
-        const EXPORT_SCALE = 2;         // 2 = retina-crisp (set to 1 for exact CSS-pixel dimensions)
-        const EXPORT_PADDING = 32;      // white margin (CSS px) around each equation
-        const EXPORT_MIN_WIDTH = 600;   // minimum canvas width (CSS px) ~ typical notebook content width
+        const EXPORT_SCALE = 3;
+        const MAX_CANVAS_DIMENSION = 30000;
+        const MAX_CANVAS_PIXELS = 90000000;
 
         let exporting = false;
-        let katexCssPromise = null;
+        let html2canvasPromise = null;
 
-        function arrayBufferToBase64(buffer) {
-            const bytes = new Uint8Array(buffer);
-            let binary = '';
-            const CHUNK = 0x8000;
-            for (let i = 0; i < bytes.length; i += CHUNK) {
-                binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+        function loadHtml2Canvas() {
+            if (typeof window.html2canvas === 'function') {
+                return Promise.resolve(window.html2canvas);
             }
-            return btoa(binary);
-        }
 
-        // Fetch katex.min.css once and inline every woff2 font as a data: URI
-        function getKatexCssWithFonts() {
-            if (!katexCssPromise) {
-                katexCssPromise = (async () => {
-                    const version = (window.katex && window.katex.version) || '0.19.0';
-                    const cssUrl = 'https://cdn.jsdelivr.net/npm/katex@' + version + '/dist/katex.min.css';
-                    const resp = await fetch(cssUrl, { mode: 'cors' });
-                    if (!resp.ok) throw new Error('Failed to fetch KaTeX CSS (' + resp.status + ')');
-                    let css = await resp.text();
-
-                    const woff2Re = /url\((['"]?)([^'")]+?\.woff2)\1\)/g;
-                    const urls = [...new Set([...css.matchAll(woff2Re)].map(m => m[2]))];
-
-                    const pairs = await Promise.all(urls.map(async u => {
-                        const fontResp = await fetch(new URL(u, cssUrl).href, { mode: 'cors' });
-                        if (!fontResp.ok) throw new Error('Failed to fetch font ' + u);
-                        const buf = await fontResp.arrayBuffer();
-                        return [u, 'data:font/woff2;base64,' + arrayBufferToBase64(buf)];
-                    }));
-                    const embedded = Object.fromEntries(pairs);
-
-                    css = css.replace(woff2Re, (m, q, u) => 'url("' + embedded[u] + '")');
-                    return css;
-                })().catch(err => {
-                    katexCssPromise = null; // allow a retry on the next attempt
-                    throw err;
+            if (!html2canvasPromise) {
+                html2canvasPromise = new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+                    script.onload = () => {
+                        if (typeof window.html2canvas === 'function') {
+                            resolve(window.html2canvas);
+                        } else {
+                            reject(new Error('The PNG renderer loaded but was not available.'));
+                        }
+                    };
+                    script.onerror = () => reject(new Error('Could not load the PNG renderer. Check your internet connection and try again.'));
+                    document.head.appendChild(script);
+                }).catch(error => {
+                    html2canvasPromise = null;
+                    throw error;
                 });
             }
-            return katexCssPromise;
+
+            return html2canvasPromise;
         }
 
-        // Measure the natural (tight) size of an equation. Display-mode roots
-        // are display:block in the preview, so measure an inline clone instead.
-        function measureEquation(el) {
-            const measure = document.createElement('div');
-            measure.style.cssText = 'position:absolute;left:-99999px;top:0;visibility:hidden;'
-                + 'display:inline-block;white-space:nowrap;font-size:16px;margin:0;padding:0;';
-            measure.appendChild(el.cloneNode(true));
-            document.body.appendChild(measure);
-            const rect = measure.getBoundingClientRect();
-            const w = Math.ceil(rect.width);
-            const h = Math.ceil(rect.height);
-            measure.remove();
-            return { w: w, h: h };
+        function chooseExportScale(width, height) {
+            const scaleForWidth = MAX_CANVAS_DIMENSION / width;
+            const scaleForHeight = MAX_CANVAS_DIMENSION / height;
+            const scaleForPixelCount = Math.sqrt(MAX_CANVAS_PIXELS / (width * height));
+            return Math.min(EXPORT_SCALE, scaleForWidth, scaleForHeight, scaleForPixelCount);
         }
 
-        // Rasterize one .katex element to a PNG data URL (pixel-identical to the preview)
-        async function renderEquationToPng(el) {
-            const size = measureEquation(el);
-            const W = Math.max(EXPORT_MIN_WIDTH, size.w + EXPORT_PADDING * 2);
-            const H = size.h + EXPORT_PADDING * 2;
+        function createExportClone() {
+            const previewBounds = preview.getBoundingClientRect();
+            const previewStyles = getComputedStyle(preview);
+            const clone = preview.cloneNode(true);
+            clone.dataset.previewExportClone = 'true';
 
-            const katexCss = await getKatexCssWithFonts();
-
-            const wrapper = document.createElement('div');
-            wrapper.style.cssText = 'width:' + W + 'px;height:' + H + 'px;box-sizing:border-box;'
-                + 'padding:' + EXPORT_PADDING + 'px;background:#ffffff;margin:0;'
-                + 'display:flex;align-items:center;justify-content:center;'
-                + 'white-space:nowrap;font-size:16px;color:#000;';
-
-            const styleEl = document.createElement('style');
-            styleEl.textContent = katexCss;
-            wrapper.appendChild(styleEl);
-            wrapper.appendChild(el.cloneNode(true));
-
-            const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '">'
-                + '<foreignObject x="0" y="0" width="100%" height="100%">'
-                + new XMLSerializer().serializeToString(wrapper)
-                + '</foreignObject></svg>';
-
-            const img = new Image();
-            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = () => reject(new Error('could not rasterize equation'));
-            });
-
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.round(W * EXPORT_SCALE);
-            canvas.height = Math.round(H * EXPORT_SCALE);
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-            return {
-                dataUrl: canvas.toDataURL('image/png'),
-                width: canvas.width,
-                height: canvas.height
+            // Match the live preview's width, typography, and current theme,
+            // but let the clone expand to the full height of its content.
+            const overrides = {
+                position: 'fixed',
+                left: '0px',
+                top: '0px',
+                width: Math.ceil(previewBounds.width) + 'px',
+                height: 'auto',
+                'max-height': 'none',
+                overflow: 'visible',
+                'overflow-y': 'visible',
+                flex: 'none',
+                'min-height': '0',
+                margin: '0',
+                opacity: '0',
+                'z-index': '-2147483648',
+                'pointer-events': 'none',
+                background: previewStyles.backgroundColor,
+                color: previewStyles.color,
+                transition: 'none',
+                'box-sizing': 'border-box'
             };
-        }
 
-        // Renders every equation in the preview; returns [{name, dataUrl, width, height}]
-        async function collectEquationPngs(onProgress) {
-            const els = Array.from(preview.querySelectorAll('.katex'));
-            const out = [];
-            for (let i = 0; i < els.length; i++) {
-                if (onProgress) onProgress(i + 1, els.length);
-                const png = await renderEquationToPng(els[i]);
-                png.name = 'equation-' + String(i + 1).padStart(3, '0') + '.png';
-                out.push(png);
+            for (const [property, value] of Object.entries(overrides)) {
+                clone.style.setProperty(property, value, 'important');
             }
-            return out;
+
+            document.body.appendChild(clone);
+            return clone;
         }
 
-        async function exportEquations() {
+        function canvasToBlob(canvas) {
+            return new Promise((resolve, reject) => {
+                canvas.toBlob(blob => {
+                    if (blob) {
+                        resolve(blob);
+                    } else {
+                        reject(new Error('The browser could not create the PNG file. Try exporting less content at once.'));
+                    }
+                }, 'image/png');
+            });
+        }
+
+        async function exportPreviewAsPng() {
             if (exporting) return;
-            const count = preview.querySelectorAll('.katex').length;
-            if (!count) {
-                status.textContent = 'No equations to export';
-                return;
-            }
             exporting = true;
             exportBtn.disabled = true;
+
+            let clone = null;
             try {
-                status.textContent = 'Preparing fonts…';
-                const pngs = await collectEquationPngs((i, n) => {
-                    status.textContent = 'Exporting ' + i + '/' + n + '…';
-                });
-                for (let i = 0; i < pngs.length; i++) {
-                    const a = document.createElement('a');
-                    a.href = pngs[i].dataUrl;
-                    a.download = pngs[i].name;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    if (i < pngs.length - 1) {
-                        await new Promise(r => setTimeout(r, 300));
-                    }
+                status.textContent = 'Preparing preview...';
+                const html2canvas = await loadHtml2Canvas();
+
+                // Wait for KaTeX and any other web fonts to finish loading.
+                if (document.fonts && document.fonts.ready) {
+                    await document.fonts.ready;
                 }
-                status.textContent = 'Exported ' + pngs.length + ' PNG' + (pngs.length === 1 ? '' : 's');
-            } catch (err) {
-                console.error('PNG export failed:', err);
-                status.textContent = 'Export failed: ' + err.message;
+
+                clone = createExportClone();
+                await new Promise(resolve => requestAnimationFrame(resolve));
+
+                const bounds = clone.getBoundingClientRect();
+                const width = Math.ceil(bounds.width);
+                const height = Math.ceil(bounds.height);
+
+                if (!width || !height) {
+                    throw new Error('The preview has no exportable dimensions.');
+                }
+
+                const scale = chooseExportScale(width, height);
+                if (!Number.isFinite(scale) || scale <= 0) {
+                    throw new Error('The preview is too large for this browser to export as one image.');
+                }
+
+                status.textContent = 'Capturing full preview...';
+                const canvas = await html2canvas(clone, {
+                    backgroundColor: getComputedStyle(preview).backgroundColor,
+                    scale,
+                    width,
+                    height,
+                    x: 0,
+                    y: 0,
+                    windowWidth: Math.max(document.documentElement.clientWidth, width),
+                    windowHeight: Math.max(window.innerHeight, height),
+                    scrollX: 0,
+                    scrollY: 0,
+                    useCORS: true,
+                    allowTaint: false,
+                    logging: false,
+                    onclone: clonedDocument => {
+                        const exportClone = clonedDocument.querySelector('[data-preview-export-clone="true"]');
+                        if (exportClone) {
+                            exportClone.style.setProperty('opacity', '1', 'important');
+                            exportClone.style.setProperty('z-index', '2147483647', 'important');
+                        }
+                    }
+                });
+
+                status.textContent = 'Saving PNG...';
+                const blob = await canvasToBlob(canvas);
+                const objectUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = objectUrl;
+                link.download = 'text-latex-preview.png';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+
+                const dimensions = canvas.width.toLocaleString() + ' × ' + canvas.height.toLocaleString() + ' px';
+                const scaleNote = scale < 1 ? ' (scaled down to fit browser limits)' : '';
+                status.textContent = 'Exported full preview: ' + dimensions + scaleNote;
+            } catch (error) {
+                console.error('Preview PNG export failed:', error);
+                status.textContent = 'Export failed: ' + error.message;
             } finally {
+                if (clone) clone.remove();
                 exporting = false;
                 exportBtn.disabled = false;
             }
         }
 
-        exportBtn.addEventListener('click', exportEquations);
+        exportBtn.addEventListener('click', exportPreviewAsPng);
 
-        // Ctrl+S (Windows/Linux) or Cmd+S (Mac) triggers the export
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === 's' || e.key === 'S')) {
-                e.preventDefault();
-                exportEquations();
+        // Ctrl+S (Windows/Linux) or Cmd+S (Mac) export the full preview.
+        document.addEventListener('keydown', event => {
+            if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 's') {
+                event.preventDefault();
+                exportPreviewAsPng();
             }
         });
+
     </script>
 </body>
 </html>
