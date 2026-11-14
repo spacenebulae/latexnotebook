@@ -240,10 +240,96 @@
             font-weight: var(--app-font-weight);
             transition: background-color 0.25s ease, color 0.25s ease;
         }
+        #authPanel {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+#authPanel form {
+    width: 100%;
+    max-width: 340px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#authPanel input {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    background: var(--editor-bg);
+    color: var(--text);
+    font: inherit;
+}
+
+#authPanel button {
+    padding: 11px;
+    border: 1px solid var(--btn-border);
+    border-radius: 8px;
+
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    font: inherit;
+    cursor: pointer;
+}
+
+#authMessage {
+    font-size: 13px;
+    text-align: center;
+}
+
+body.signed-out > .toolbar,
+body.signed-out > .main,
+body.signed-out > .status {
+    display: none;
+        }
     </style>
 </head>
 <body>
+<div id="authPanel">
+    <h2>Welcome to LaTeX Notebook</h2>
+    <p>Sign in to access your notebook</p>
 
+    <form id="authForm">
+        <input
+            type="email"
+            id="authEmail"
+            placeholder="Email address"
+            required
+        >
+
+        <input
+            type="password"
+            id="authPassword"
+            placeholder="Password"
+            minlength="8"
+            required
+        >
+
+        <button type="submit">
+            Sign In
+        </button>
+
+        <button type="button" id="signUpBtn">
+            Create Account
+        </button>
+
+        <p id="authMessage" role="status"></p>
+    </form>
+</div>
     <!-- Top toolbar (moved up so it spans the whole app): export, font picker, theme toggle -->
     <div class="toolbar">
         <!-- Export button: click or press Ctrl+S to save the entire preview as one PNG -->
@@ -257,6 +343,9 @@
         <button id="themeToggle" type="button" title="Switch to dark mode" aria-label="Switch to dark mode">
             <svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             <svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
+        <button id="signOutBtn" type="button">
+    Sign Out
         </button>
     </div>
 
@@ -279,6 +368,107 @@
         const status = document.getElementById('status');
         const exportBtn = document.getElementById('exportBtn');
         let saveTimeout;
+        // Supabase configuration
+const SUPABASE_URL = 'https://ufirthrjsjkcmhlqjchl.supabase.co/';
+const SUPABASE_KEY = 'sb_publishable_muLiI9lCKY1ZyNo82GxQ7g_9cNpzfBw';
+
+// Initialize Supabase
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+// Authentication state
+let currentUser = null;
+
+// Authentication elements
+const authPanel = document.getElementById('authPanel');
+const authForm = document.getElementById('authForm');
+const authEmail = document.getElementById('authEmail');
+const authPassword = document.getElementById('authPassword');
+const authMessage = document.getElementById('authMessage');
+const signUpBtn = document.getElementById('signUpBtn');
+        authForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    authMessage.textContent = 'Signing in...';
+
+    const { error } =
+        await supabaseClient.auth.signInWithPassword({
+            email: authEmail.value,
+            password: authPassword.value
+        });
+
+    if (error) {
+        authMessage.textContent = error.message;
+    }
+});
+        signUpBtn.addEventListener('click', async function () {
+    authMessage.textContent = 'Creating account...';
+
+    const { data, error } =
+        await supabaseClient.auth.signUp({
+            email: authEmail.value,
+            password: authPassword.value
+        });
+
+    if (error) {
+        authMessage.textContent = error.message;
+        return;
+    }
+
+    if (!data.session) {
+        authMessage.textContent =
+            'Account created! Please check your email to confirm your account.';
+    }
+});
+        // Listen for authentication changes
+supabaseClient.auth.onAuthStateChange(
+    (event, session) => {
+
+        clearTimeout(saveTimeout);
+
+        currentUser = session?.user ?? null;
+
+        if (currentUser) {
+
+            // User is authenticated
+            document.body.classList.remove('signed-out');
+            authPanel.hidden = true;
+
+            // Load this user's saved document
+            editor.value = localStorage.getItem(
+                'latex_editor_content_' + currentUser.id
+            ) || '';
+
+            updatePreview();
+
+        } else {
+
+            // User is not authenticated
+            document.body.classList.add('signed-out');
+            authPanel.hidden = false;
+
+            editor.value = '';
+            preview.replaceChildren();
+
+            authMessage.textContent = '';
+            status.textContent = 'Signed out';
+        }
+    }
+);
+        const signOutBtn = document.getElementById('signOutBtn');
+
+signOutBtn.addEventListener('click', async function () {
+
+    const { error } = await supabaseClient.auth.signOut({
+        scope: 'local'
+    });
+
+    if (error) {
+        status.textContent = error.message;
+    }
+});
 
         /* ============================================================
            Theme toggle & font picker (added)
@@ -331,19 +521,14 @@
         updateThemeButton();
 
         // Load saved content on startup (or leave blank if none)
-        const savedContent = localStorage.getItem('latex_editor_content');
-        if (savedContent) {
-            editor.value = savedContent;
-        } else {
-            editor.value = ""; // Removed greeting text
-        }
+        editor.value = "";
 
         // Render function
         function updatePreview() {
             const text = editor.value;
 
             // Use innerHTML instead of textContent so KaTeX can inject HTML nodes
-            preview.innerHTML = text;
+            preview.textContent = text;
 
             // Tell KaTeX to find and render math delimiters
             // (guarded so the very first render before KaTeX finishes loading doesn't throw)
@@ -361,8 +546,14 @@
             status.textContent = "Typing...";
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(() => {
-                localStorage.setItem('latex_editor_content', text);
-                status.textContent = "Saved";
+                if (currentUser) {
+    localStorage.setItem(
+        'latex_editor_content_' + currentUser.id,
+        text
+    );
+}
+
+status.textContent = "Saved";
             }, 300);
         }
 
