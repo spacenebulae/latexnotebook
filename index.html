@@ -285,6 +285,9 @@
     font: inherit;
     cursor: pointer;
 }
+#authPanel[hidden] {
+    display: none;
+}
 
 #authMessage {
     font-size: 13px;
@@ -407,10 +410,13 @@ const signUpBtn = document.getElementById('signUpBtn');
     authMessage.textContent = 'Creating account...';
 
     const { data, error } =
-        await supabaseClient.auth.signUp({
-            email: authEmail.value,
-            password: authPassword.value
-        });
+    await supabaseClient.auth.signUp({
+        email: authEmail.value,
+        password: authPassword.value,
+        options: {
+            emailRedirectTo: window.location.origin + window.location.pathname
+        }
+    });
 
     if (error) {
         authMessage.textContent = error.message;
