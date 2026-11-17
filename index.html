@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Text &amp; LaTeX Editor</title>
 
-    <!-- KaTeX CSS & JS (rendering is triggered explicitly on #preview) -->
+    <!-- KaTeX CSS & JS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.css" integrity="sha384-3rdsX6e5mueWyoweR9NIVmtEsUkokpBT/0ALqKKIBMr9j4qhHkaIkAcGgsE6uVlp" crossorigin="anonymous">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.js" integrity="sha384-QFFtAGzvvj+bfgCGxXJlNZZR1nXEZgvG8tDLCCY1F19xl20WlfTYgguB4VcNdxYk" crossorigin="anonymous"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/contrib/auto-render.min.js" integrity="sha384-bjyGPfbij8/NDKJhSGZNP/khQVgtHUE5exjm4Ydllo42FwIgYsdLO2lXGmRBf5Mz" crossorigin="anonymous"></script>
@@ -74,10 +74,22 @@
             --btn-hover-bg: #efefef;
             --btn-hover-border: #bbbbbb;
             --btn-text: #333333;
+            --accent-bg: #2563eb;
+            --accent-hover: #1d4ed8;
+            --accent-text: #ffffff;
+            --active-pill-bg: #e8f1ff;
+            --active-pill-border: #93c5fd;
+            --active-pill-text: #1d4ed8;
+            --warn-bg: #fef3c7;
+            --warn-border: #f59e0b;
+            --warn-text: #78350f;
             --hint-text: #999999;
             --status-text: #888888;
-            --status-bg: rgba(255, 255, 255, 0.8);
+            --status-bg: rgba(255, 255, 255, 0.85);
             --placeholder: #aaaaaa;
+            --ghost-text: #a3a3a3;
+            --modal-backdrop: rgba(15, 23, 42, 0.42);
+            --shadow: 0 12px 36px rgba(0, 0, 0, 0.16);
             --app-font: 'Nunito', Verdana, sans-serif;
             --app-font-weight: 800;
         }
@@ -95,10 +107,22 @@
             --btn-hover-bg: #383838;
             --btn-hover-border: #5c5c5c;
             --btn-text: #d4d4d4;
+            --accent-bg: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-text: #ffffff;
+            --active-pill-bg: #1e3a5f;
+            --active-pill-border: #3b82f6;
+            --active-pill-text: #93c5fd;
+            --warn-bg: #3a2b10;
+            --warn-border: #b45309;
+            --warn-text: #fde68a;
             --hint-text: #808080;
             --status-text: #9a9a9a;
-            --status-bg: rgba(30, 30, 30, 0.85);
+            --status-bg: rgba(30, 30, 30, 0.88);
             --placeholder: #6a6a6a;
+            --ghost-text: #686868;
+            --modal-backdrop: rgba(0, 0, 0, 0.58);
+            --shadow: 0 16px 44px rgba(0, 0, 0, 0.48);
         }
 
         /* ---- Base Layout ---- */
@@ -134,6 +158,7 @@
             display: flex;
             flex-direction: column;
             min-width: 0;
+            position: relative;
         }
 
         /* ---- Toolbar ---- */
@@ -141,7 +166,7 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 10px;
+            gap: 8px 10px;
             padding: 10px 14px;
             border-bottom: 1px solid var(--border);
             background: var(--toolbar-bg);
@@ -155,12 +180,15 @@
             font-family: var(--app-font);
             font-weight: var(--app-font-weight);
             font-size: 13px;
-            padding: 6px 14px;
+            padding: 6px 13px;
             border: 1px solid var(--btn-border);
             border-radius: 6px;
             background: var(--btn-bg);
             color: var(--btn-text);
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             transition: background-color 0.15s ease, border-color 0.15s ease, color 0.25s ease;
         }
 
@@ -172,6 +200,19 @@
         .toolbar button:disabled {
             opacity: 0.5;
             cursor: default;
+        }
+
+        .toolbar button.is-toggle-on {
+            background: var(--active-pill-bg);
+            border-color: var(--active-pill-border);
+            color: var(--active-pill-text);
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border);
+            margin: 0 2px;
         }
 
         .kbd-hint {
@@ -209,8 +250,6 @@
             width: 30px;
             height: 30px;
             padding: 0;
-            display: inline-flex;
-            align-items: center;
             justify-content: center;
         }
 
@@ -230,7 +269,73 @@
             display: block;
         }
 
+        /* ---- Pane Banners (Conflict / Offline / Render Paused) ---- */
+        .pane-banner {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 12px;
+            padding: 8px 14px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-weight: 500;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border);
+            background: var(--toolbar-bg);
+            color: var(--text);
+            flex: none;
+        }
+
+        .pane-banner[hidden] {
+            display: none;
+        }
+
+        .pane-banner.is-warn {
+            background: var(--warn-bg);
+            border-bottom-color: var(--warn-border);
+            color: var(--warn-text);
+        }
+
+        .pane-banner .banner-text {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .pane-banner button {
+            font: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 5px;
+            border: 1px solid var(--btn-border);
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            cursor: pointer;
+        }
+
+        .pane-banner button:hover {
+            background: var(--btn-hover-bg);
+        }
+
+        .pane-banner button.is-primary {
+            background: var(--accent-bg);
+            border-color: var(--accent-bg);
+            color: var(--accent-text);
+        }
+
+        .pane-banner button.is-primary:hover {
+            background: var(--accent-hover);
+        }
+
         /* ---- Editor & Preview ---- */
+        .editor-wrap {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
         textarea {
             width: 100%;
             flex: 1;
@@ -254,6 +359,157 @@
             opacity: 1;
         }
 
+        /* Inline Gray Autocomplete Ghost */
+        #mathGhost {
+            position: absolute;
+            pointer-events: none;
+            z-index: 3;
+            font-family: var(--app-font);
+            font-weight: var(--app-font-weight);
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--ghost-text);
+            white-space: nowrap;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #mathGhost[hidden] {
+            display: none;
+        }
+
+        #caretMirror {
+            position: fixed;
+            top: -99999px;
+            left: -99999px;
+            visibility: hidden;
+            pointer-events: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            box-sizing: border-box;
+        }
+
+        /* Floating Command Preview Popup */
+        #mathSuggest {
+            position: fixed;
+            z-index: 5000;
+            min-width: 250px;
+            max-width: 350px;
+            background: var(--toolbar-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            box-shadow: var(--shadow);
+            padding: 5px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-weight: 400;
+            user-select: none;
+        }
+
+        #mathSuggest[hidden] {
+            display: none;
+        }
+
+        .math-suggest-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 3px 8px 5px;
+            font-size: 11px;
+            color: var(--hint-text);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 4px;
+        }
+
+        .math-suggest-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .math-suggest-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .math-suggest-item:hover,
+        .math-suggest-item.is-active {
+            background: var(--btn-hover-bg);
+        }
+
+        .math-suggest-item.is-active {
+            outline: 1px solid var(--btn-border);
+        }
+
+        .math-suggest-glyph {
+            width: 26px;
+            height: 24px;
+            flex: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            background: var(--btn-bg);
+            border: 1px solid var(--border);
+            font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .math-suggest-body {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .math-suggest-cmd {
+            font-family: "JetBrains Mono", Consolas, monospace;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .math-suggest-rest {
+            color: var(--ghost-text);
+            font-weight: 400;
+        }
+
+        .math-suggest-desc {
+            font-size: 11px;
+            color: var(--hint-text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .math-suggest-tab {
+            flex: none;
+            font-size: 10.5px;
+            font-weight: 600;
+            padding: 2px 5px;
+            border-radius: 4px;
+            border: 1px solid var(--btn-border);
+            background: var(--btn-bg);
+            color: var(--hint-text);
+        }
+
+        .math-suggest-item:not(.is-active) .math-suggest-tab {
+            display: none;
+        }
+
         .preview-surface {
             padding: 20px;
             overflow-y: auto;
@@ -272,6 +528,10 @@
             transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
         }
 
+        .preview-block {
+            display: inline;
+        }
+
         /* ---- Status Badge ---- */
         .status {
             position: fixed;
@@ -280,11 +540,174 @@
             font-size: 12px;
             color: var(--status-text);
             background: var(--status-bg);
-            padding: 2px 5px;
-            border-radius: 3px;
+            padding: 3px 8px;
+            border-radius: 5px;
+            border: 1px solid transparent;
             font-family: var(--app-font);
             font-weight: var(--app-font-weight);
             transition: background-color 0.25s ease, color 0.25s ease;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        /* ---- PDF Export Modal (Blurred Background) ---- */
+        #pdfModalBackdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            background: var(--modal-backdrop);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        #pdfModalBackdrop[hidden] {
+            display: none;
+        }
+
+        #pdfModal {
+            width: 100%;
+            max-width: 440px;
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 18px 20px 20px;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-weight: 400;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--hint-text);
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--btn-hover-bg);
+            color: var(--text);
+        }
+
+        .pdf-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 11px 12px;
+        }
+
+        .pdf-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .pdf-field.is-full {
+            grid-column: 1 / -1;
+        }
+
+        .pdf-field label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--hint-text);
+        }
+
+        .pdf-field input[type="text"],
+        .pdf-field select {
+            font: inherit;
+            font-size: 13px;
+            padding: 7px 9px;
+            border: 1px solid var(--btn-border);
+            border-radius: 6px;
+            background: var(--editor-bg);
+            color: var(--text);
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .pdf-checkbox-row {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            margin-top: 2px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .pdf-summary {
+            margin: 12px 0 0;
+            padding: 8px 10px;
+            border-radius: 6px;
+            background: var(--toolbar-bg);
+            border: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--hint-text);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 9px;
+            margin-top: 16px;
+        }
+
+        .modal-footer button {
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 15px;
+            border-radius: 7px;
+            border: 1px solid var(--btn-border);
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            cursor: pointer;
+        }
+
+        .modal-footer button:hover:not(:disabled) {
+            background: var(--btn-hover-bg);
+        }
+
+        .modal-footer button.is-primary {
+            background: var(--accent-bg);
+            border-color: var(--accent-bg);
+            color: var(--accent-text);
+        }
+
+        .modal-footer button.is-primary:hover:not(:disabled) {
+            background: var(--accent-hover);
+        }
+
+        .modal-footer button:disabled {
+            opacity: 0.55;
+            cursor: default;
         }
 
         /* ---- Auth Overlay ---- */
@@ -395,6 +818,20 @@
             Export preview as PNG
         </button>
         <span class="kbd-hint">or press Ctrl&nbsp;+&nbsp;S</span>
+        <button id="exportPdfBtn" type="button" title="Configure and export your rendered document as a PDF">
+            Export PDF
+        </button>
+
+        <span class="toolbar-divider" aria-hidden="true"></span>
+
+        <button id="renderToggleBtn" type="button" class="is-toggle-on" aria-pressed="true" title="Toggle live LaTeX rendering in the preview pane">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <span id="renderToggleLabel">Render: On</span>
+        </button>
+
         <span class="spacer"></span>
 
         <label class="font-label" for="fontSelect">Font</label>
@@ -422,11 +859,118 @@
 
     <!-- Split Workspace -->
     <div class="main">
-        <div class="pane">
-            <textarea id="editor" placeholder="Type plain text here. Use $...$ for inline math and $$...$$ for block math."></textarea>
+        <div class="pane" id="editorPane">
+            <div id="syncBanner" class="pane-banner is-warn" hidden></div>
+            <div class="editor-wrap">
+                <textarea id="editor" placeholder="Type plain text here. Use $...$ for inline math and $$...$$ for block math. Type \ inside math mode for Tab-autocomplete."></textarea>
+                <div id="mathGhost" hidden aria-hidden="true"></div>
+            </div>
         </div>
-        <div class="pane">
+        <div class="pane" id="previewPane">
+            <div id="renderPausedBanner" class="pane-banner" hidden>
+                <span class="banner-text">Live rendering is paused while typing.</span>
+                <button type="button" id="renderOnceBtn">Render once</button>
+            </div>
             <div id="preview" class="preview-surface"></div>
+        </div>
+    </div>
+
+    <!-- Offscreen Caret Measurement & Autocomplete Popup -->
+    <div id="caretMirror" aria-hidden="true"></div>
+    <div id="mathSuggest" hidden role="listbox" aria-label="LaTeX math suggestions">
+        <div class="math-suggest-header">
+            <span>Math commands</span>
+            <span>Tab to complete &middot; &uarr;&darr;</span>
+        </div>
+        <div id="mathSuggestList" class="math-suggest-list"></div>
+    </div>
+
+    <!-- PDF Export Options Modal -->
+    <div id="pdfModalBackdrop" hidden role="dialog" aria-modal="true" aria-labelledby="pdfModalTitle">
+        <div id="pdfModal">
+            <div class="modal-header">
+                <h3 id="pdfModalTitle">Export as PDF</h3>
+                <button type="button" id="pdfModalCloseBtn" class="modal-close" aria-label="Close">&times;</button>
+            </div>
+
+            <form id="pdfExportForm">
+                <div class="pdf-form-grid">
+                    <div class="pdf-field is-full">
+                        <label for="pdfFileName">File name</label>
+                        <input type="text" id="pdfFileName" value="latex-notebook" placeholder="latex-notebook" required>
+                    </div>
+
+                    <div class="pdf-field is-full">
+                        <label for="pdfDocTitle">Header title (optional)</label>
+                        <input type="text" id="pdfDocTitle" placeholder="Leave blank for no title">
+                    </div>
+
+                    <div class="pdf-field">
+                        <label for="pdfPageSize">Page size</label>
+                        <select id="pdfPageSize">
+                            <option value="letter">Letter (8.5 &times; 11 in)</option>
+                            <option value="a4">A4 (210 &times; 297 mm)</option>
+                            <option value="legal">Legal (8.5 &times; 14 in)</option>
+                            <option value="a5">A5 (148 &times; 210 mm)</option>
+                        </select>
+                    </div>
+
+                    <div class="pdf-field">
+                        <label for="pdfOrientation">Orientation</label>
+                        <select id="pdfOrientation">
+                            <option value="portrait">Portrait</option>
+                            <option value="landscape">Landscape</option>
+                        </select>
+                    </div>
+
+                    <div class="pdf-field">
+                        <label for="pdfMargins">Margins</label>
+                        <select id="pdfMargins">
+                            <option value="normal">Normal (20 mm)</option>
+                            <option value="narrow">Narrow (10 mm)</option>
+                            <option value="wide">Wide (30 mm)</option>
+                            <option value="none">None (0 mm)</option>
+                        </select>
+                    </div>
+
+                    <div class="pdf-field">
+                        <label for="pdfTheme">Theme</label>
+                        <select id="pdfTheme">
+                            <option value="light">Light (Print-friendly)</option>
+                            <option value="current">Match current theme</option>
+                        </select>
+                    </div>
+
+                    <div class="pdf-field">
+                        <label for="pdfFontSize">Text size</label>
+                        <select id="pdfFontSize">
+                            <option value="12">Small (12 px)</option>
+                            <option value="15" selected>Normal (15 px)</option>
+                            <option value="18">Large (18 px)</option>
+                        </select>
+                    </div>
+
+                    <div class="pdf-field">
+                        <label for="pdfQuality">Quality</label>
+                        <select id="pdfQuality">
+                            <option value="2">Standard (2&times;)</option>
+                            <option value="3" selected>High (3&times;)</option>
+                        </select>
+                    </div>
+
+                    <label class="pdf-checkbox-row" for="pdfPageNumbers">
+                        <input type="checkbox" id="pdfPageNumbers" checked>
+                        <span>Include page numbers in footer</span>
+                    </label>
+                </div>
+
+                <p id="pdfSummary" class="pdf-summary"></p>
+
+                <div class="modal-footer">
+                    <button type="button" id="pdfCancelBtn">Cancel</button>
+                    <button type="submit" id="pdfConfirmBtn" class="is-primary">Export PDF</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -442,10 +986,23 @@
             const SUPABASE_URL = 'https://ufirthrjsjkcmhlqjchl.supabase.co/';
             const SUPABASE_KEY = 'sb_publishable_muLiI9lCKY1ZyNo82GxQ7g_9cNpzfBw';
 
-            const SAVE_DEBOUNCE_MS = 500;
+            const LOCAL_SAVE_DEBOUNCE_MS = 80;
+            const CLOUD_SAVE_DEBOUNCE_MS = 600;
+            const RETRY_DELAYS_MS = [2000, 5000, 10000, 20000, 30000];
+            const FOCUS_SYNC_MIN_INTERVAL_MS = 10000;
+
+            const RENDER_LARGE_DOC_THRESHOLD = 8000;
+            const RENDER_FAST_DEBOUNCE_MS = 16;
+            const RENDER_LARGE_DEBOUNCE_MS = 75;
+            const RENDER_FRAME_BUDGET_MS = 8;
+            const KATEX_CACHE_LIMIT = 800;
+
             const EXPORT_SCALE = 3;
             const MAX_CANVAS_DIMENSION = 30000;
             const MAX_CANVAS_PIXELS = 90000000;
+
+            const STORAGE_RENDER_KEY = 'latex_editor_render_enabled';
+            const STORAGE_PDF_OPTS_KEY = 'latex_editor_pdf_options';
 
             /* ============================================================
                2. DOM Elements
@@ -453,9 +1010,38 @@
             const editor = document.getElementById('editor');
             const preview = document.getElementById('preview');
             const status = document.getElementById('status');
+            const syncBanner = document.getElementById('syncBanner');
+
             const exportBtn = document.getElementById('exportBtn');
+            const exportPdfBtn = document.getElementById('exportPdfBtn');
+            const renderToggleBtn = document.getElementById('renderToggleBtn');
+            const renderToggleLabel = document.getElementById('renderToggleLabel');
+            const renderPausedBanner = document.getElementById('renderPausedBanner');
+            const renderOnceBtn = document.getElementById('renderOnceBtn');
+
             const fontSelect = document.getElementById('fontSelect');
             const themeToggle = document.getElementById('themeToggle');
+
+            const mathGhost = document.getElementById('mathGhost');
+            const caretMirror = document.getElementById('caretMirror');
+            const mathSuggest = document.getElementById('mathSuggest');
+            const mathSuggestList = document.getElementById('mathSuggestList');
+
+            const pdfModalBackdrop = document.getElementById('pdfModalBackdrop');
+            const pdfExportForm = document.getElementById('pdfExportForm');
+            const pdfModalCloseBtn = document.getElementById('pdfModalCloseBtn');
+            const pdfCancelBtn = document.getElementById('pdfCancelBtn');
+            const pdfConfirmBtn = document.getElementById('pdfConfirmBtn');
+            const pdfFileName = document.getElementById('pdfFileName');
+            const pdfDocTitle = document.getElementById('pdfDocTitle');
+            const pdfPageSize = document.getElementById('pdfPageSize');
+            const pdfOrientation = document.getElementById('pdfOrientation');
+            const pdfMargins = document.getElementById('pdfMargins');
+            const pdfTheme = document.getElementById('pdfTheme');
+            const pdfFontSize = document.getElementById('pdfFontSize');
+            const pdfQuality = document.getElementById('pdfQuality');
+            const pdfPageNumbers = document.getElementById('pdfPageNumbers');
+            const pdfSummary = document.getElementById('pdfSummary');
 
             const authPanel = document.getElementById('authPanel');
             const authForm = document.getElementById('authForm');
@@ -492,6 +1078,31 @@
                 return 'latex_editor_content_' + userId;
             }
 
+            function getLocalMetaKey(userId) {
+                return 'latex_editor_meta_' + userId;
+            }
+
+            function readLocalSnapshot(userId) {
+                const content = safeStorageGet(getLocalDocumentKey(userId));
+                const rawMeta = safeStorageGet(getLocalMetaKey(userId));
+                let meta = null;
+                if (rawMeta) {
+                    try {
+                        meta = JSON.parse(rawMeta);
+                    } catch (e) {
+                        meta = null;
+                    }
+                }
+                return { content, meta };
+            }
+
+            function writeLocalSnapshot(userId, content, metaUpdates) {
+                const existing = readLocalSnapshot(userId).meta || {};
+                const nextMeta = Object.assign({}, existing, metaUpdates);
+                safeStorageSet(getLocalDocumentKey(userId), content);
+                safeStorageSet(getLocalMetaKey(userId), JSON.stringify(nextMeta));
+            }
+
             /* ============================================================
                4. Theme Toggle & Font Picker
                ============================================================ */
@@ -513,6 +1124,7 @@
                 fontSelect.addEventListener('change', () => {
                     window.applyEditorFont(fontSelect.value);
                     safeStorageSet('latex_editor_font', fontSelect.value);
+                    updateAutocomplete();
                 });
             }
 
@@ -539,156 +1151,1645 @@
             }
 
             /* ============================================================
-               5. Preview Rendering & Document Persistence
+               5. Optimized Incremental + Time-Sliced Preview Renderer
                ============================================================ */
-            let currentUser = null;
-            let activeUserId = null;
-            let documentLoadId = 0;
-            let isDocumentReady = false;
-            let hasUnsavedChanges = false;
-            let saveTimeout = null;
+            let isRenderEnabled = safeStorageGet(STORAGE_RENDER_KEY) !== 'false';
+            let renderedBlocks = []; // Array<{ text: string, el: HTMLElement }>
+            let renderDebounceTimer = null;
+            let renderRafId = null;
+            let renderGeneration = 0;
 
-            function renderPreview() {
-                preview.textContent = editor.value;
+            const katexCache = new Map();
 
-                if (typeof renderMathInElement === 'function') {
-                    try {
-                        renderMathInElement(preview, {
-                            delimiters: [
-                                { left: '$$', right: '$$', display: true },
-                                { left: '$', right: '$', display: false }
-                            ],
-                            throwOnError: false
-                        });
-                    } catch (mathError) {
-                        console.error('KaTeX rendering error:', mathError);
+            function getCachedKatexHtml(expr, displayMode) {
+                const key = (displayMode ? 'D:' : 'I:') + expr;
+                if (katexCache.has(key)) {
+                    const cached = katexCache.get(key);
+                    // Refresh LRU position
+                    katexCache.delete(key);
+                    katexCache.set(key, cached);
+                    return cached;
+                }
+
+                const html = window.katex.renderToString(expr, {
+                    displayMode: displayMode,
+                    throwOnError: false
+                });
+                katexCache.set(key, html);
+
+                if (katexCache.size > KATEX_CACHE_LIMIT) {
+                    const oldestKey = katexCache.keys().next().value;
+                    katexCache.delete(oldestKey);
+                }
+                return html;
+            }
+
+            function findEndOfMath(delimiter, text, startIndex) {
+                let index = startIndex;
+                let braceLevel = 0;
+
+                while (index < text.length) {
+                    const ch = text[index];
+                    if (braceLevel <= 0 && text.startsWith(delimiter, index)) {
+                        return index;
                     }
+                    if (ch === '\\') {
+                        index += 2;
+                        continue;
+                    }
+                    if (ch === '{') {
+                        braceLevel++;
+                    } else if (ch === '}') {
+                        braceLevel--;
+                    }
+                    index++;
+                }
+                return -1;
+            }
+
+            function isEscapedAt(text, pos) {
+                let backslashes = 0;
+                for (let i = pos - 1; i >= 0 && text.charCodeAt(i) === 92; i--) {
+                    backslashes++;
+                }
+                return (backslashes & 1) === 1;
+            }
+
+            function buildRenderedFragment(blockText) {
+                const frag = document.createDocumentFragment();
+                if (!blockText) return frag;
+
+                if (!window.katex || typeof window.katex.renderToString !== 'function') {
+                    frag.appendChild(document.createTextNode(blockText));
+                    return frag;
+                }
+
+                let pos = 0;
+                let textStart = 0;
+
+                const flushPlain = (end) => {
+                    if (end > textStart) {
+                        frag.appendChild(document.createTextNode(blockText.slice(textStart, end)));
+                    }
+                };
+
+                while (pos < blockText.length) {
+                    const ch = blockText[pos];
+
+                    if (ch === '$' && !isEscapedAt(blockText, pos)) {
+                        const isDisplay = blockText[pos + 1] === '$';
+                        const delim = isDisplay ? '$$' : '$';
+                        const contentStart = pos + delim.length;
+                        const endIdx = findEndOfMath(delim, blockText, contentStart);
+
+                        if (endIdx !== -1) {
+                            flushPlain(pos);
+                            const expr = blockText.slice(contentStart, endIdx);
+                            try {
+                                const html = getCachedKatexHtml(expr, isDisplay);
+                                const tpl = document.createElement('template');
+                                tpl.innerHTML = html;
+                                frag.appendChild(tpl.content);
+                            } catch (err) {
+                                console.error('KaTeX rendering error:', err);
+                                frag.appendChild(document.createTextNode(blockText.slice(pos, endIdx + delim.length)));
+                            }
+                            pos = endIdx + delim.length;
+                            textStart = pos;
+                            continue;
+                        }
+                    }
+                    pos++;
+                }
+
+                flushPlain(blockText.length);
+                return frag;
+            }
+
+            function createRenderedBlockElement(blockText) {
+                const span = document.createElement('span');
+                span.className = 'preview-block';
+                span.appendChild(buildRenderedFragment(blockText));
+                return span;
+            }
+
+            function splitDocumentIntoBlocks(text) {
+                if (!text) return [];
+
+                const lines = [];
+                let lineStart = 0;
+                for (let i = 0; i < text.length; i++) {
+                    if (text.charCodeAt(i) === 10) {
+                        lines.push(text.slice(lineStart, i + 1));
+                        lineStart = i + 1;
+                    }
+                }
+                if (lineStart < text.length) {
+                    lines.push(text.slice(lineStart));
+                }
+
+                const blocks = [];
+                let currentLines = [];
+                let inDisplay = false;
+                let inInline = false;
+                let openLines = 0;
+
+                for (let l = 0; l < lines.length; l++) {
+                    const line = lines[l];
+                    currentLines.push(line);
+
+                    let i = 0;
+                    while (i < line.length) {
+                        const ch = line.charCodeAt(i);
+                        if (ch === 92) { // '\'
+                            i += 2;
+                            continue;
+                        }
+                        if (ch === 36) { // '$'
+                            if (line.charCodeAt(i + 1) === 36) {
+                                if (!inInline) {
+                                    inDisplay = !inDisplay;
+                                }
+                                i += 2;
+                                continue;
+                            } else if (!inDisplay) {
+                                inInline = !inInline;
+                            }
+                        }
+                        i++;
+                    }
+
+                    if (inDisplay || inInline) {
+                        openLines++;
+                        const isBlank = line.trim().length === 0;
+                        // Prevent unclosed delimiters from merging the rest of the document
+                        if ((inInline && (isBlank || openLines >= 6)) || (inDisplay && isBlank && openLines >= 80)) {
+                            inInline = false;
+                            if (openLines >= 80) inDisplay = false;
+                        }
+                    } else {
+                        openLines = 0;
+                    }
+
+                    if (!inDisplay && !inInline) {
+                        blocks.push(currentLines.join(''));
+                        currentLines = [];
+                        openLines = 0;
+                    }
+                }
+
+                if (currentLines.length > 0) {
+                    blocks.push(currentLines.join(''));
+                }
+
+                return blocks;
+            }
+
+            function cancelPendingRenderWork() {
+                renderGeneration++;
+                if (renderDebounceTimer) {
+                    clearTimeout(renderDebounceTimer);
+                    renderDebounceTimer = null;
+                }
+                if (renderRafId !== null) {
+                    cancelAnimationFrame(renderRafId);
+                    renderRafId = null;
                 }
             }
 
-            async function persistDocument(userId, content) {
-                safeStorageSet(getLocalDocumentKey(userId), content);
+            function renderAllSynchronouslyInto(targetEl, text) {
+                const blocks = splitDocumentIntoBlocks(text);
+                const frag = document.createDocumentFragment();
+                for (let i = 0; i < blocks.length; i++) {
+                    frag.appendChild(createRenderedBlockElement(blocks[i]));
+                }
+                targetEl.replaceChildren(frag);
+                return blocks;
+            }
 
-                const { error } = await supabaseClient
+            function applyIncrementalPreviewRender(text, immediate) {
+                cancelPendingRenderWork();
+                const thisGen = renderGeneration;
+
+                const executeDiff = () => {
+                    if (thisGen !== renderGeneration) return;
+
+                    const newBlocks = splitDocumentIntoBlocks(text);
+                    const oldLen = renderedBlocks.length;
+                    const newLen = newBlocks.length;
+
+                    let prefix = 0;
+                    while (prefix < oldLen && prefix < newLen && renderedBlocks[prefix].text === newBlocks[prefix]) {
+                        prefix++;
+                    }
+
+                    let oldEnd = oldLen - 1;
+                    let newEnd = newLen - 1;
+                    while (oldEnd >= prefix && newEnd >= prefix && renderedBlocks[oldEnd].text === newBlocks[newEnd]) {
+                        oldEnd--;
+                        newEnd--;
+                    }
+
+                    const removeCount = oldEnd - prefix + 1;
+                    const insertCount = newEnd - prefix + 1;
+
+                    if (removeCount === 0 && insertCount === 0) {
+                        return;
+                    }
+
+                    // Determine anchor DOM node for the untouched suffix
+                    const suffixStartIdx = oldEnd + 1;
+                    const anchorNode = suffixStartIdx < renderedBlocks.length
+                        ? renderedBlocks[suffixStartIdx].el
+                        : null;
+
+                    if (removeCount > 0) {
+                        const removed = renderedBlocks.splice(prefix, removeCount);
+                        for (let i = 0; i < removed.length; i++) {
+                            removed[i].el.remove();
+                        }
+                    }
+
+                    if (insertCount <= 0) {
+                        return;
+                    }
+
+                    // Small edits apply immediately in one fragment
+                    if (immediate || insertCount <= 16) {
+                        const frag = document.createDocumentFragment();
+                        const newEntries = [];
+                        for (let i = prefix; i <= newEnd; i++) {
+                            const blockText = newBlocks[i];
+                            const el = createRenderedBlockElement(blockText);
+                            frag.appendChild(el);
+                            newEntries.push({ text: blockText, el });
+                        }
+                        preview.insertBefore(frag, anchorNode);
+                        renderedBlocks.splice(prefix, 0, ...newEntries);
+                        return;
+                    }
+
+                    // Large paste / full re-render: time-slice across animation frames
+                    let cursor = prefix;
+                    let spliceIdx = prefix;
+
+                    const stepSlice = () => {
+                        if (thisGen !== renderGeneration) {
+                            renderRafId = null;
+                            return;
+                        }
+
+                        const frameStart = performance.now();
+                        const frag = document.createDocumentFragment();
+                        const batchEntries = [];
+
+                        while (cursor <= newEnd) {
+                            const blockText = newBlocks[cursor];
+                            const el = createRenderedBlockElement(blockText);
+                            frag.appendChild(el);
+                            batchEntries.push({ text: blockText, el });
+                            cursor++;
+
+                            if (batchEntries.length >= 12 && (performance.now() - frameStart) >= RENDER_FRAME_BUDGET_MS) {
+                                break;
+                            }
+                        }
+
+                        preview.insertBefore(frag, anchorNode);
+                        renderedBlocks.splice(spliceIdx, 0, ...batchEntries);
+                        spliceIdx += batchEntries.length;
+
+                        if (cursor <= newEnd) {
+                            renderRafId = requestAnimationFrame(stepSlice);
+                        } else {
+                            renderRafId = null;
+                        }
+                    };
+
+                    renderRafId = requestAnimationFrame(stepSlice);
+                };
+
+                if (immediate) {
+                    executeDiff();
+                    return;
+                }
+
+                const delay = text.length > RENDER_LARGE_DOC_THRESHOLD
+                    ? RENDER_LARGE_DEBOUNCE_MS
+                    : RENDER_FAST_DEBOUNCE_MS;
+
+                renderDebounceTimer = setTimeout(() => {
+                    renderDebounceTimer = null;
+                    renderRafId = requestAnimationFrame(() => {
+                        renderRafId = null;
+                        executeDiff();
+                    });
+                }, delay);
+            }
+
+            function clearRenderedPreview() {
+                cancelPendingRenderWork();
+                renderedBlocks = [];
+                preview.replaceChildren();
+            }
+
+            function syncRenderToggleUI() {
+                renderToggleBtn.classList.toggle('is-toggle-on', isRenderEnabled);
+                renderToggleBtn.setAttribute('aria-pressed', String(isRenderEnabled));
+                renderToggleLabel.textContent = isRenderEnabled ? 'Render: On' : 'Render: Off';
+                renderToggleBtn.title = isRenderEnabled
+                    ? 'Live math rendering is ON (click to pause while typing)'
+                    : 'Live math rendering is OFF (click to resume)';
+                renderPausedBanner.hidden = isRenderEnabled;
+            }
+
+            function schedulePreviewRender(options) {
+                const force = Boolean(options && options.force);
+                const immediate = Boolean(options && options.immediate);
+                if (!isRenderEnabled && !force) return;
+                applyIncrementalPreviewRender(editor.value, immediate);
+            }
+
+            function initRenderToggle() {
+                syncRenderToggleUI();
+
+                renderToggleBtn.addEventListener('click', () => {
+                    isRenderEnabled = !isRenderEnabled;
+                    safeStorageSet(STORAGE_RENDER_KEY, isRenderEnabled ? 'true' : 'false');
+                    syncRenderToggleUI();
+
+                    if (isRenderEnabled) {
+                        applyIncrementalPreviewRender(editor.value, false);
+                    } else {
+                        cancelPendingRenderWork();
+                    }
+                });
+
+                renderOnceBtn.addEventListener('click', () => {
+                    applyIncrementalPreviewRender(editor.value, false);
+                });
+            }
+
+            /* ============================================================
+               6. Math Mode Autocomplete (Gray Ghost + Tab + Command Preview)
+               ============================================================ */
+            const MATH_COMMANDS = [
+                // Structures & Fractions
+                { cmd: '\\frac', insert: '\\frac{}{}', cursorBack: 3, glyph: 'a/b', desc: 'fraction', rank: 100 },
+                { cmd: '\\dfrac', insert: '\\dfrac{}{}', cursorBack: 3, glyph: 'a/b', desc: 'display fraction', rank: 68 },
+                { cmd: '\\tfrac', insert: '\\tfrac{}{}', cursorBack: 3, glyph: 'a/b', desc: 'text fraction', rank: 60 },
+                { cmd: '\\sqrt', insert: '\\sqrt{}', cursorBack: 1, glyph: '√x', desc: 'square root', rank: 98 },
+                { cmd: '\\binom', insert: '\\binom{}{}', cursorBack: 3, glyph: '(ⁿₖ)', desc: 'binomial coefficient', rank: 74 },
+                { cmd: '\\text', insert: '\\text{}', cursorBack: 1, glyph: 'Ab', desc: 'roman text in math', rank: 94 },
+                { cmd: '\\textbf', insert: '\\textbf{}', cursorBack: 1, glyph: 'Ab', desc: 'bold text', rank: 60 },
+                { cmd: '\\mathbb', insert: '\\mathbb{}', cursorBack: 1, glyph: 'ℝ', desc: 'blackboard bold (R, N, Z)', rank: 88 },
+                { cmd: '\\mathbf', insert: '\\mathbf{}', cursorBack: 1, glyph: 'x', desc: 'bold math', rank: 75 },
+                { cmd: '\\mathcal', insert: '\\mathcal{}', cursorBack: 1, glyph: 'ℒ', desc: 'calligraphic font', rank: 74 },
+                { cmd: '\\mathrm', insert: '\\mathrm{}', cursorBack: 1, glyph: 'd', desc: 'upright roman math', rank: 72 },
+                { cmd: '\\mathfrak', insert: '\\mathfrak{}', cursorBack: 1, glyph: '𝔄', desc: 'Fraktur font', rank: 52 },
+                { cmd: '\\overline', insert: '\\overline{}', cursorBack: 1, glyph: 'x̄', desc: 'overline bar', rank: 76 },
+                { cmd: '\\underline', insert: '\\underline{}', cursorBack: 1, glyph: 'x̲', desc: 'underline', rank: 68 },
+                { cmd: '\\overbrace', insert: '\\overbrace{}^{}', cursorBack: 4, glyph: '⏞', desc: 'overbrace with label', rank: 56 },
+                { cmd: '\\underbrace', insert: '\\underbrace{}_{}', cursorBack: 4, glyph: '⏟', desc: 'underbrace with label', rank: 62 },
+                { cmd: '\\vec', insert: '\\vec{}', cursorBack: 1, glyph: 'v⃗', desc: 'vector arrow', rank: 84 },
+                { cmd: '\\hat', insert: '\\hat{}', cursorBack: 1, glyph: 'x̂', desc: 'hat accent', rank: 82 },
+                { cmd: '\\bar', insert: '\\bar{}', cursorBack: 1, glyph: 'x̄', desc: 'bar accent', rank: 80 },
+                { cmd: '\\tilde', insert: '\\tilde{}', cursorBack: 1, glyph: 'x̃', desc: 'tilde accent', rank: 76 },
+                { cmd: '\\dot', insert: '\\dot{}', cursorBack: 1, glyph: 'ẋ', desc: 'time derivative dot', rank: 75 },
+                { cmd: '\\ddot', insert: '\\ddot{}', cursorBack: 1, glyph: 'ẍ', desc: 'second derivative', rank: 68 },
+                { cmd: '\\left(', insert: '\\left(  \\right)', cursorBack: 8, glyph: '( )', desc: 'auto-sized parentheses', rank: 82 },
+                { cmd: '\\left[', insert: '\\left[  \\right]', cursorBack: 8, glyph: '[ ]', desc: 'auto-sized brackets', rank: 72 },
+                { cmd: '\\left\\{', insert: '\\left\\{  \\right\\}', cursorBack: 9, glyph: '{ }', desc: 'auto-sized braces', rank: 70 },
+                { cmd: '\\left|', insert: '\\left|  \\right|', cursorBack: 8, glyph: '| |', desc: 'auto-sized absolute value', rank: 70 },
+                { cmd: '\\begin{aligned}', insert: '\\begin{aligned}\n\n\\end{aligned}', cursorBack: 15, glyph: '≡', desc: 'aligned equations block', rank: 85 },
+                { cmd: '\\begin{cases}', insert: '\\begin{cases}\n\n\\end{cases}', cursorBack: 13, glyph: '{', desc: 'piecewise cases block', rank: 82 },
+                { cmd: '\\begin{pmatrix}', insert: '\\begin{pmatrix}\n\n\\end{pmatrix}', cursorBack: 15, glyph: '(⋮)', desc: 'parenthesized matrix', rank: 80 },
+                { cmd: '\\begin{bmatrix}', insert: '\\begin{bmatrix}\n\n\\end{bmatrix}', cursorBack: 15, glyph: '[⋮]', desc: 'bracketed matrix', rank: 78 },
+
+                // Big Operators & Calculus
+                { cmd: '\\sum', insert: '\\sum', cursorBack: 0, glyph: '∑', desc: 'summation', rank: 97 },
+                { cmd: '\\sum_{}^{}', insert: '\\sum_{}^{}', cursorBack: 4, glyph: '∑ⁿᵢ', desc: 'summation with bounds', rank: 86 },
+                { cmd: '\\prod', insert: '\\prod', cursorBack: 0, glyph: '∏', desc: 'product', rank: 84 },
+                { cmd: '\\int', insert: '\\int', cursorBack: 0, glyph: '∫', desc: 'integral', rank: 96 },
+                { cmd: '\\int_{}^{}', insert: '\\int_{}^{}', cursorBack: 4, glyph: '∫ᵇₐ', desc: 'definite integral', rank: 85 },
+                { cmd: '\\iint', insert: '\\iint', cursorBack: 0, glyph: '∬', desc: 'double integral', rank: 70 },
+                { cmd: '\\iiint', insert: '\\iiint', cursorBack: 0, glyph: '∭', desc: 'triple integral', rank: 64 },
+                { cmd: '\\oint', insert: '\\oint', cursorBack: 0, glyph: '∮', desc: 'contour integral', rank: 72 },
+                { cmd: '\\lim', insert: '\\lim', cursorBack: 0, glyph: 'lim', desc: 'limit', rank: 92 },
+                { cmd: '\\lim_{}', insert: '\\lim_{}', cursorBack: 1, glyph: 'lim→', desc: 'limit with subscript', rank: 80 },
+                { cmd: '\\partial', insert: '\\partial', cursorBack: 0, glyph: '∂', desc: 'partial derivative', rank: 90 },
+                { cmd: '\\nabla', insert: '\\nabla', cursorBack: 0, glyph: '∇', desc: 'nabla / gradient', rank: 86 },
+                { cmd: '\\infty', insert: '\\infty', cursorBack: 0, glyph: '∞', desc: 'infinity', rank: 95 },
+                { cmd: '\\bigcup', insert: '\\bigcup', cursorBack: 0, glyph: '⋃', desc: 'indexed union', rank: 68 },
+                { cmd: '\\bigcap', insert: '\\bigcap', cursorBack: 0, glyph: '⋂', desc: 'indexed intersection', rank: 68 },
+
+                // Lowercase Greek
+                { cmd: '\\alpha', insert: '\\alpha', cursorBack: 0, glyph: 'α', desc: 'Greek alpha', rank: 96 },
+                { cmd: '\\beta', insert: '\\beta', cursorBack: 0, glyph: 'β', desc: 'Greek beta', rank: 94 },
+                { cmd: '\\gamma', insert: '\\gamma', cursorBack: 0, glyph: 'γ', desc: 'Greek gamma', rank: 90 },
+                { cmd: '\\delta', insert: '\\delta', cursorBack: 0, glyph: 'δ', desc: 'Greek delta', rank: 90 },
+                { cmd: '\\epsilon', insert: '\\epsilon', cursorBack: 0, glyph: 'ϵ', desc: 'Greek epsilon', rank: 86 },
+                { cmd: '\\varepsilon', insert: '\\varepsilon', cursorBack: 0, glyph: 'ε', desc: 'curly epsilon', rank: 82 },
+                { cmd: '\\zeta', insert: '\\zeta', cursorBack: 0, glyph: 'ζ', desc: 'Greek zeta', rank: 76 },
+                { cmd: '\\eta', insert: '\\eta', cursorBack: 0, glyph: 'η', desc: 'Greek eta', rank: 80 },
+                { cmd: '\\theta', insert: '\\theta', cursorBack: 0, glyph: 'θ', desc: 'Greek theta', rank: 93 },
+                { cmd: '\\vartheta', insert: '\\vartheta', cursorBack: 0, glyph: 'ϑ', desc: 'variant theta', rank: 62 },
+                { cmd: '\\iota', insert: '\\iota', cursorBack: 0, glyph: 'ι', desc: 'Greek iota', rank: 65 },
+                { cmd: '\\kappa', insert: '\\kappa', cursorBack: 0, glyph: 'κ', desc: 'Greek kappa', rank: 75 },
+                { cmd: '\\lambda', insert: '\\lambda', cursorBack: 0, glyph: 'λ', desc: 'Greek lambda', rank: 91 },
+                { cmd: '\\mu', insert: '\\mu', cursorBack: 0, glyph: 'μ', desc: 'Greek mu', rank: 88 },
+                { cmd: '\\nu', insert: '\\nu', cursorBack: 0, glyph: 'ν', desc: 'Greek nu', rank: 78 },
+                { cmd: '\\xi', insert: '\\xi', cursorBack: 0, glyph: 'ξ', desc: 'Greek xi', rank: 76 },
+                { cmd: '\\pi', insert: '\\pi', cursorBack: 0, glyph: 'π', desc: 'Greek pi', rank: 95 },
+                { cmd: '\\rho', insert: '\\rho', cursorBack: 0, glyph: 'ρ', desc: 'Greek rho', rank: 83 },
+                { cmd: '\\sigma', insert: '\\sigma', cursorBack: 0, glyph: 'σ', desc: 'Greek sigma', rank: 89 },
+                { cmd: '\\tau', insert: '\\tau', cursorBack: 0, glyph: 'τ', desc: 'Greek tau', rank: 84 },
+                { cmd: '\\upsilon', insert: '\\upsilon', cursorBack: 0, glyph: 'υ', desc: 'Greek upsilon', rank: 64 },
+                { cmd: '\\phi', insert: '\\phi', cursorBack: 0, glyph: 'ϕ', desc: 'Greek phi', rank: 87 },
+                { cmd: '\\varphi', insert: '\\varphi', cursorBack: 0, glyph: 'φ', desc: 'curly phi', rank: 83 },
+                { cmd: '\\chi', insert: '\\chi', cursorBack: 0, glyph: 'χ', desc: 'Greek chi', rank: 78 },
+                { cmd: '\\psi', insert: '\\psi', cursorBack: 0, glyph: 'ψ', desc: 'Greek psi', rank: 85 },
+                { cmd: '\\omega', insert: '\\omega', cursorBack: 0, glyph: 'ω', desc: 'Greek omega', rank: 88 },
+
+                // Uppercase Greek
+                { cmd: '\\Gamma', insert: '\\Gamma', cursorBack: 0, glyph: 'Γ', desc: 'capital Gamma', rank: 75 },
+                { cmd: '\\Delta', insert: '\\Delta', cursorBack: 0, glyph: 'Δ', desc: 'capital Delta', rank: 84 },
+                { cmd: '\\Theta', insert: '\\Theta', cursorBack: 0, glyph: 'Θ', desc: 'capital Theta', rank: 75 },
+                { cmd: '\\Lambda', insert: '\\Lambda', cursorBack: 0, glyph: 'Λ', desc: 'capital Lambda', rank: 74 },
+                { cmd: '\\Xi', insert: '\\Xi', cursorBack: 0, glyph: 'Ξ', desc: 'capital Xi', rank: 64 },
+                { cmd: '\\Pi', insert: '\\Pi', cursorBack: 0, glyph: 'Π', desc: 'capital Pi', rank: 72 },
+                { cmd: '\\Sigma', insert: '\\Sigma', cursorBack: 0, glyph: 'Σ', desc: 'capital Sigma', rank: 82 },
+                { cmd: '\\Upsilon', insert: '\\Upsilon', cursorBack: 0, glyph: 'Υ', desc: 'capital Upsilon', rank: 58 },
+                { cmd: '\\Phi', insert: '\\Phi', cursorBack: 0, glyph: 'Φ', desc: 'capital Phi', rank: 76 },
+                { cmd: '\\Psi', insert: '\\Psi', cursorBack: 0, glyph: 'Ψ', desc: 'capital Psi', rank: 75 },
+                { cmd: '\\Omega', insert: '\\Omega', cursorBack: 0, glyph: 'Ω', desc: 'capital Omega', rank: 82 },
+
+                // Relations, Sets & Logic
+                { cmd: '\\leq', insert: '\\leq', cursorBack: 0, glyph: '≤', desc: 'less than or equal', rank: 92 },
+                { cmd: '\\le', insert: '\\le', cursorBack: 0, glyph: '≤', desc: 'less than or equal', rank: 84 },
+                { cmd: '\\geq', insert: '\\geq', cursorBack: 0, glyph: '≥', desc: 'greater than or equal', rank: 92 },
+                { cmd: '\\ge', insert: '\\ge', cursorBack: 0, glyph: '≥', desc: 'greater than or equal', rank: 84 },
+                { cmd: '\\neq', insert: '\\neq', cursorBack: 0, glyph: '≠', desc: 'not equal', rank: 93 },
+                { cmd: '\\approx', insert: '\\approx', cursorBack: 0, glyph: '≈', desc: 'approximately equal', rank: 90 },
+                { cmd: '\\equiv', insert: '\\equiv', cursorBack: 0, glyph: '≡', desc: 'equivalent / congruent', rank: 86 },
+                { cmd: '\\cong', insert: '\\cong', cursorBack: 0, glyph: '≅', desc: 'congruent / isomorphic', rank: 76 },
+                { cmd: '\\sim', insert: '\\sim', cursorBack: 0, glyph: '∼', desc: 'similar / distributed as', rank: 82 },
+                { cmd: '\\simeq', insert: '\\simeq', cursorBack: 0, glyph: '≃', desc: 'asymptotically equal', rank: 70 },
+                { cmd: '\\propto', insert: '\\propto', cursorBack: 0, glyph: '∝', desc: 'proportional to', rank: 78 },
+                { cmd: '\\ll', insert: '\\ll', cursorBack: 0, glyph: '≪', desc: 'much less than', rank: 68 },
+                { cmd: '\\gg', insert: '\\gg', cursorBack: 0, glyph: '≫', desc: 'much greater than', rank: 68 },
+                { cmd: '\\in', insert: '\\in', cursorBack: 0, glyph: '∈', desc: 'element of', rank: 91 },
+                { cmd: '\\notin', insert: '\\notin', cursorBack: 0, glyph: '∉', desc: 'not an element of', rank: 82 },
+                { cmd: '\\ni', insert: '\\ni', cursorBack: 0, glyph: '∋', desc: 'contains element', rank: 62 },
+                { cmd: '\\subset', insert: '\\subset', cursorBack: 0, glyph: '⊂', desc: 'proper subset', rank: 82 },
+                { cmd: '\\subseteq', insert: '\\subseteq', cursorBack: 0, glyph: '⊆', desc: 'subset or equal', rank: 86 },
+                { cmd: '\\supset', insert: '\\supset', cursorBack: 0, glyph: '⊃', desc: 'proper superset', rank: 74 },
+                { cmd: '\\supseteq', insert: '\\supseteq', cursorBack: 0, glyph: '⊇', desc: 'superset or equal', rank: 76 },
+                { cmd: '\\cup', insert: '\\cup', cursorBack: 0, glyph: '∪', desc: 'set union', rank: 85 },
+                { cmd: '\\cap', insert: '\\cap', cursorBack: 0, glyph: '∩', desc: 'set intersection', rank: 85 },
+                { cmd: '\\setminus', insert: '\\setminus', cursorBack: 0, glyph: '∖', desc: 'set difference', rank: 75 },
+                { cmd: '\\emptyset', insert: '\\emptyset', cursorBack: 0, glyph: '∅', desc: 'empty set', rank: 82 },
+                { cmd: '\\varnothing', insert: '\\varnothing', cursorBack: 0, glyph: '∅', desc: 'variant empty set', rank: 70 },
+                { cmd: '\\forall', insert: '\\forall', cursorBack: 0, glyph: '∀', desc: 'for all (universal)', rank: 89 },
+                { cmd: '\\exists', insert: '\\exists', cursorBack: 0, glyph: '∃', desc: 'there exists', rank: 89 },
+                { cmd: '\\nexists', insert: '\\nexists', cursorBack: 0, glyph: '∄', desc: 'does not exist', rank: 65 },
+                { cmd: '\\neg', insert: '\\neg', cursorBack: 0, glyph: '¬', desc: 'logical negation', rank: 76 },
+                { cmd: '\\land', insert: '\\land', cursorBack: 0, glyph: '∧', desc: 'logical AND', rank: 78 },
+                { cmd: '\\lor', insert: '\\lor', cursorBack: 0, glyph: '∨', desc: 'logical OR', rank: 78 },
+                { cmd: '\\implies', insert: '\\implies', cursorBack: 0, glyph: '⟹', desc: 'implies', rank: 88 },
+                { cmd: '\\iff', insert: '\\iff', cursorBack: 0, glyph: '⟺', desc: 'if and only if', rank: 87 },
+                { cmd: '\\therefore', insert: '\\therefore', cursorBack: 0, glyph: '∴', desc: 'therefore', rank: 78 },
+                { cmd: '\\because', insert: '\\because', cursorBack: 0, glyph: '∵', desc: 'because', rank: 70 },
+                { cmd: '\\perp', insert: '\\perp', cursorBack: 0, glyph: '⊥', desc: 'perpendicular', rank: 78 },
+                { cmd: '\\parallel', insert: '\\parallel', cursorBack: 0, glyph: '∥', desc: 'parallel', rank: 74 },
+                { cmd: '\\vdash', insert: '\\vdash', cursorBack: 0, glyph: '⊢', desc: 'proves / turnstile', rank: 64 },
+                { cmd: '\\models', insert: '\\models', cursorBack: 0, glyph: '⊨', desc: 'models / entails', rank: 64 },
+
+                // Binary Operators & Arrows
+                { cmd: '\\times', insert: '\\times', cursorBack: 0, glyph: '×', desc: 'multiplication cross', rank: 94 },
+                { cmd: '\\cdot', insert: '\\cdot', cursorBack: 0, glyph: '·', desc: 'center dot product', rank: 94 },
+                { cmd: '\\div', insert: '\\div', cursorBack: 0, glyph: '÷', desc: 'division sign', rank: 82 },
+                { cmd: '\\pm', insert: '\\pm', cursorBack: 0, glyph: '±', desc: 'plus-minus', rank: 92 },
+                { cmd: '\\mp', insert: '\\mp', cursorBack: 0, glyph: '∓', desc: 'minus-plus', rank: 74 },
+                { cmd: '\\circ', insert: '\\circ', cursorBack: 0, glyph: '∘', desc: 'composition circle', rank: 82 },
+                { cmd: '\\bullet', insert: '\\bullet', cursorBack: 0, glyph: '•', desc: 'bullet operator', rank: 72 },
+                { cmd: '\\oplus', insert: '\\oplus', cursorBack: 0, glyph: '⊕', desc: 'direct sum / XOR', rank: 78 },
+                { cmd: '\\otimes', insert: '\\otimes', cursorBack: 0, glyph: '⊗', desc: 'tensor product', rank: 78 },
+                { cmd: '\\to', insert: '\\to', cursorBack: 0, glyph: '→', desc: 'maps to / approaches', rank: 94 },
+                { cmd: '\\rightarrow', insert: '\\rightarrow', cursorBack: 0, glyph: '→', desc: 'right arrow', rank: 90 },
+                { cmd: '\\leftarrow', insert: '\\leftarrow', cursorBack: 0, glyph: '←', desc: 'left arrow', rank: 82 },
+                { cmd: '\\leftrightarrow', insert: '\\leftrightarrow', cursorBack: 0, glyph: '↔', desc: 'double arrow', rank: 78 },
+                { cmd: '\\Rightarrow', insert: '\\Rightarrow', cursorBack: 0, glyph: '⇒', desc: 'double right arrow', rank: 86 },
+                { cmd: '\\Leftarrow', insert: '\\Leftarrow', cursorBack: 0, glyph: '⇐', desc: 'double left arrow', rank: 76 },
+                { cmd: '\\Leftrightarrow', insert: '\\Leftrightarrow', cursorBack: 0, glyph: '⇔', desc: 'double equiv arrow', rank: 80 },
+                { cmd: '\\mapsto', insert: '\\mapsto', cursorBack: 0, glyph: '↦', desc: 'function maps to', rank: 84 },
+                { cmd: '\\uparrow', insert: '\\uparrow', cursorBack: 0, glyph: '↑', desc: 'up arrow', rank: 68 },
+                { cmd: '\\downarrow', insert: '\\downarrow', cursorBack: 0, glyph: '↓', desc: 'down arrow', rank: 68 },
+
+                // Spacing, Ellipsis & Functions
+                { cmd: '\\dots', insert: '\\dots', cursorBack: 0, glyph: '…', desc: 'ellipsis dots', rank: 88 },
+                { cmd: '\\cdots', insert: '\\cdots', cursorBack: 0, glyph: '⋯', desc: 'centered dots', rank: 86 },
+                { cmd: '\\vdots', insert: '\\vdots', cursorBack: 0, glyph: '⋮', desc: 'vertical dots', rank: 76 },
+                { cmd: '\\ddots', insert: '\\ddots', cursorBack: 0, glyph: '⋱', desc: 'diagonal dots', rank: 74 },
+                { cmd: '\\quad', insert: '\\quad', cursorBack: 0, glyph: '␣', desc: '1em math space', rank: 85 },
+                { cmd: '\\qquad', insert: '\\qquad', cursorBack: 0, glyph: '␣␣', desc: '2em math space', rank: 78 },
+                { cmd: '\\sin', insert: '\\sin', cursorBack: 0, glyph: 'sin', desc: 'sine function', rank: 91 },
+                { cmd: '\\cos', insert: '\\cos', cursorBack: 0, glyph: 'cos', desc: 'cosine function', rank: 91 },
+                { cmd: '\\tan', insert: '\\tan', cursorBack: 0, glyph: 'tan', desc: 'tangent function', rank: 89 },
+                { cmd: '\\arcsin', insert: '\\arcsin', cursorBack: 0, glyph: 'sin⁻¹', desc: 'inverse sine', rank: 75 },
+                { cmd: '\\arccos', insert: '\\arccos', cursorBack: 0, glyph: 'cos⁻¹', desc: 'inverse cosine', rank: 75 },
+                { cmd: '\\arctan', insert: '\\arctan', cursorBack: 0, glyph: 'tan⁻¹', desc: 'inverse tangent', rank: 75 },
+                { cmd: '\\sinh', insert: '\\sinh', cursorBack: 0, glyph: 'sinh', desc: 'hyperbolic sine', rank: 70 },
+                { cmd: '\\cosh', insert: '\\cosh', cursorBack: 0, glyph: 'cosh', desc: 'hyperbolic cosine', rank: 70 },
+                { cmd: '\\tanh', insert: '\\tanh', cursorBack: 0, glyph: 'tanh', desc: 'hyperbolic tangent', rank: 70 },
+                { cmd: '\\log', insert: '\\log', cursorBack: 0, glyph: 'log', desc: 'logarithm', rank: 90 },
+                { cmd: '\\ln', insert: '\\ln', cursorBack: 0, glyph: 'ln', desc: 'natural logarithm', rank: 90 },
+                { cmd: '\\exp', insert: '\\exp', cursorBack: 0, glyph: 'exp', desc: 'exponential', rank: 85 },
+                { cmd: '\\max', insert: '\\max', cursorBack: 0, glyph: 'max', desc: 'maximum', rank: 84 },
+                { cmd: '\\min', insert: '\\min', cursorBack: 0, glyph: 'min', desc: 'minimum', rank: 84 },
+                { cmd: '\\sup', insert: '\\sup', cursorBack: 0, glyph: 'sup', desc: 'supremum', rank: 76 },
+                { cmd: '\\inf', insert: '\\inf', cursorBack: 0, glyph: 'inf', desc: 'infimum', rank: 76 },
+                { cmd: '\\det', insert: '\\det', cursorBack: 0, glyph: 'det', desc: 'determinant', rank: 82 },
+                { cmd: '\\dim', insert: '\\dim', cursorBack: 0, glyph: 'dim', desc: 'dimension', rank: 76 },
+                { cmd: '\\ker', insert: '\\ker', cursorBack: 0, glyph: 'ker', desc: 'kernel', rank: 74 },
+                { cmd: '\\gcd', insert: '\\gcd', cursorBack: 0, glyph: 'gcd', desc: 'greatest common divisor', rank: 72 },
+                { cmd: '\\pmod', insert: '\\pmod{}', cursorBack: 1, glyph: 'mod', desc: 'modulo in parentheses', rank: 74 },
+                { cmd: '\\hbar', insert: '\\hbar', cursorBack: 0, glyph: 'ℏ', desc: 'reduced Planck constant', rank: 76 },
+                { cmd: '\\ell', insert: '\\ell', cursorBack: 0, glyph: 'ℓ', desc: 'script l', rank: 78 },
+                { cmd: '\\aleph', insert: '\\aleph', cursorBack: 0, glyph: 'ℵ', desc: 'aleph cardinal', rank: 68 },
+                { cmd: '\\angle', insert: '\\angle', cursorBack: 0, glyph: '∠', desc: 'angle symbol', rank: 74 },
+                { cmd: '\\prime', insert: '\\prime', cursorBack: 0, glyph: '′', desc: 'prime symbol', rank: 70 },
+                { cmd: '\\Re', insert: '\\Re', cursorBack: 0, glyph: 'ℜ', desc: 'real part', rank: 70 },
+                { cmd: '\\Im', insert: '\\Im', cursorBack: 0, glyph: 'ℑ', desc: 'imaginary part', rank: 70 },
+                { cmd: '\\frown', insert: '\\frown', cursorBack: 0, glyph: '⌢', desc: 'frown arc', rank: 54 },
+                { cmd: '\\smile', insert: '\\smile', cursorBack: 0, glyph: '⌣', desc: 'smile arc', rank: 54 }
+            ];
+
+            const MATH_ENVIRONMENTS = new Set([
+                'equation', 'equation*', 'align', 'align*', 'aligned', 'gather',
+                'gather*', 'multline', 'multline*', 'cases', 'matrix', 'pmatrix',
+                'bmatrix', 'Bmatrix', 'vmatrix', 'Vmatrix', 'split', 'array'
+            ]);
+
+            const commandUsageBoost = new Map();
+            let acState = {
+                active: false,
+                tokenStart: 0,
+                token: '',
+                matches: [],
+                selectedIndex: 0,
+                dismissedForTokenAt: null
+            };
+
+            function isInMathMode(text, cursorPos) {
+                let mode = 'text'; // 'text' | 'inline' | 'display' | 'paren' | 'bracket' | 'env'
+                let envDepth = 0;
+                let i = 0;
+
+                while (i < cursorPos) {
+                    const ch = text[i];
+
+                    // Reset unclosed single-$ on blank lines so a stray $5 doesn't lock later paragraphs
+                    if (mode === 'inline' && ch === '\n' && text[i + 1] === '\n') {
+                        mode = 'text';
+                        i += 2;
+                        continue;
+                    }
+
+                    if (ch === '\\') {
+                        const two = text.slice(i, i + 2);
+                        if (two === '\\(' && mode === 'text') {
+                            mode = 'paren';
+                            i += 2;
+                            continue;
+                        }
+                        if (two === '\\)' && mode === 'paren') {
+                            mode = 'text';
+                            i += 2;
+                            continue;
+                        }
+                        if (two === '\\[' && mode === 'text') {
+                            mode = 'bracket';
+                            i += 2;
+                            continue;
+                        }
+                        if (two === '\\]' && mode === 'bracket') {
+                            mode = 'text';
+                            i += 2;
+                            continue;
+                        }
+
+                        if (text.startsWith('\\begin{', i)) {
+                            const closeBrace = text.indexOf('}', i + 7);
+                            if (closeBrace !== -1 && closeBrace < cursorPos) {
+                                const envName = text.slice(i + 7, closeBrace);
+                                if (MATH_ENVIRONMENTS.has(envName)) {
+                                    if (mode === 'text') mode = 'env';
+                                    envDepth++;
+                                }
+                                i = closeBrace + 1;
+                                continue;
+                            }
+                        }
+
+                        if (text.startsWith('\\end{', i)) {
+                            const closeBrace = text.indexOf('}', i + 5);
+                            if (closeBrace !== -1 && closeBrace < cursorPos) {
+                                const envName = text.slice(i + 5, closeBrace);
+                                if (MATH_ENVIRONMENTS.has(envName) && envDepth > 0) {
+                                    envDepth--;
+                                    if (envDepth === 0 && mode === 'env') {
+                                        mode = 'text';
+                                    }
+                                }
+                                i = closeBrace + 1;
+                                continue;
+                            }
+                        }
+
+                        i += 2;
+                        continue;
+                    }
+
+                    if (ch === '$') {
+                        if (text[i + 1] === '$') {
+                            if (mode === 'display') {
+                                mode = 'text';
+                            } else if (mode === 'text') {
+                                mode = 'display';
+                            }
+                            i += 2;
+                            continue;
+                        }
+                        if (mode === 'inline') {
+                            mode = 'text';
+                        } else if (mode === 'text') {
+                            mode = 'inline';
+                        }
+                        i += 1;
+                        continue;
+                    }
+
+                    i++;
+                }
+
+                return mode !== 'text';
+            }
+
+            function findCommandTokenBeforeCaret(text, caretPos) {
+                const lineStart = text.lastIndexOf('\n', caretPos - 1) + 1;
+                const beforeOnLine = text.slice(lineStart, caretPos);
+                // Match \command or \begin{env prefix or \left( style
+                const match = beforeOnLine.match(/(\\(?:begin\{[a-zA-Z*]*|[a-zA-Z]*|left[\(\[\|\\]?))$/);
+                if (!match) return null;
+
+                const token = match[1];
+                const tokenStart = caretPos - token.length;
+                // Avoid triggering on escaped backslash "\\"
+                if (tokenStart > 0 && isEscapedAt(text, tokenStart)) {
+                    return null;
+                }
+                return { token, tokenStart };
+            }
+
+            function rankAndMatchCommands(token) {
+                if (token === '\\') {
+                    return MATH_COMMANDS
+                        .slice()
+                        .sort((a, b) => (b.rank + (commandUsageBoost.get(b.cmd) || 0)) - (a.rank + (commandUsageBoost.get(a.cmd) || 0)))
+                        .slice(0, 7);
+                }
+
+                const lowerToken = token.toLowerCase();
+                const matches = [];
+
+                for (let i = 0; i < MATH_COMMANDS.length; i++) {
+                    const entry = MATH_COMMANDS[i];
+                    if (entry.insert.startsWith(token) || entry.cmd.toLowerCase().startsWith(lowerToken)) {
+                        let score = entry.rank + (commandUsageBoost.get(entry.cmd) || 0);
+                        if (entry.insert.startsWith(token)) score += 60;
+                        if (entry.cmd === token) score += 25;
+                        // Prefer shorter exact-intent completions on ties
+                        score -= entry.insert.length * 0.25;
+                        matches.push({ entry, score });
+                    }
+                }
+
+                matches.sort((a, b) => b.score - a.score);
+                return matches.slice(0, 7).map((m) => m.entry);
+            }
+
+            function measureCaretCoordinates(caretPos) {
+                const cs = getComputedStyle(editor);
+                const mirrorProps = [
+                    'fontFamily', 'fontWeight', 'fontSize', 'lineHeight',
+                    'letterSpacing', 'wordSpacing', 'textIndent', 'tabSize',
+                    'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'
+                ];
+
+                for (let i = 0; i < mirrorProps.length; i++) {
+                    const prop = mirrorProps[i];
+                    caretMirror.style[prop] = cs[prop];
+                }
+                caretMirror.style.width = editor.clientWidth + 'px';
+                caretMirror.style.border = 'none';
+
+                const value = editor.value;
+                const beforeText = value.slice(0, caretPos);
+                const afterSnippet = value.slice(caretPos, caretPos + 24) || '\u200b';
+
+                const marker = document.createElement('span');
+                marker.textContent = '\u200b';
+
+                caretMirror.replaceChildren(
+                    document.createTextNode(beforeText),
+                    marker,
+                    document.createTextNode(afterSnippet)
+                );
+
+                const lineH = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) * 1.5);
+                const lineTop = marker.offsetTop - Math.max(0, (lineH - marker.offsetHeight) / 2);
+
+                return {
+                    x: marker.offsetLeft - editor.scrollLeft,
+                    y: lineTop - editor.scrollTop,
+                    lineHeight: lineH,
+                    paddingRight: parseFloat(cs.paddingRight) || 20
+                };
+            }
+
+            function hideAutocomplete() {
+                acState.active = false;
+                acState.matches = [];
+                acState.selectedIndex = 0;
+                mathGhost.hidden = true;
+                mathGhost.textContent = '';
+                mathSuggest.hidden = true;
+                mathSuggestList.replaceChildren();
+            }
+
+            function renderAutocompleteUI() {
+                if (!acState.active || acState.matches.length === 0) {
+                    hideAutocomplete();
+                    return;
+                }
+
+                const caretPos = editor.selectionStart;
+                const coords = measureCaretCoordinates(caretPos);
+
+                // Hide if caret is scrolled out of the editor viewport
+                if (coords.y < -4 || coords.y + coords.lineHeight > editor.clientHeight + 8) {
+                    mathGhost.hidden = true;
+                    mathSuggest.hidden = true;
+                    return;
+                }
+
+                const activeEntry = acState.matches[acState.selectedIndex] || acState.matches[0];
+                const token = acState.token;
+
+                // 1. Gray Inline Ghost Text (when >=1 char typed after '\' and cursor sits before space/newline/EOF)
+                const nextChar = editor.value[caretPos];
+                const isClearAfterCursor = !nextChar || /\s/.test(nextChar);
+                let ghostSuffix = '';
+                if (token.length > 1 && activeEntry.insert.startsWith(token)) {
+                    ghostSuffix = activeEntry.insert.slice(token.length);
+                }
+
+                if (ghostSuffix && isClearAfterCursor && !ghostSuffix.includes('\n')) {
+                    const maxGhostWidth = Math.max(0, editor.clientWidth - coords.x - coords.paddingRight);
+                    if (maxGhostWidth > 8) {
+                        mathGhost.textContent = ghostSuffix;
+                        mathGhost.style.left = coords.x + 'px';
+                        mathGhost.style.top = coords.y + 'px';
+                        mathGhost.style.maxWidth = maxGhostWidth + 'px';
+                        mathGhost.hidden = false;
+                    } else {
+                        mathGhost.hidden = true;
+                    }
+                } else {
+                    mathGhost.hidden = true;
+                }
+
+                // 2. Floating Preview of Possible Commands
+                const listFrag = document.createDocumentFragment();
+                for (let i = 0; i < acState.matches.length; i++) {
+                    const item = acState.matches[i];
+                    const row = document.createElement('div');
+                    row.className = 'math-suggest-item' + (i === acState.selectedIndex ? ' is-active' : '');
+                    row.setAttribute('role', 'option');
+                    row.setAttribute('aria-selected', String(i === acState.selectedIndex));
+
+                    const glyph = document.createElement('span');
+                    glyph.className = 'math-suggest-glyph';
+                    glyph.textContent = item.glyph;
+
+                    const body = document.createElement('div');
+                    body.className = 'math-suggest-body';
+
+                    const cmdEl = document.createElement('div');
+                    cmdEl.className = 'math-suggest-cmd';
+                    const displayCmd = item.insert.replace(/\n+/g, ' … ');
+                    if (displayCmd.startsWith(token)) {
+                        cmdEl.appendChild(document.createTextNode(token));
+                        const rest = document.createElement('span');
+                        rest.className = 'math-suggest-rest';
+                        rest.textContent = displayCmd.slice(token.length);
+                        cmdEl.appendChild(rest);
+                    } else {
+                        cmdEl.textContent = displayCmd;
+                    }
+
+                    const descEl = document.createElement('div');
+                    descEl.className = 'math-suggest-desc';
+                    descEl.textContent = item.desc;
+
+                    body.appendChild(cmdEl);
+                    body.appendChild(descEl);
+
+                    const tabBadge = document.createElement('span');
+                    tabBadge.className = 'math-suggest-tab';
+                    tabBadge.textContent = 'Tab';
+
+                    row.appendChild(glyph);
+                    row.appendChild(body);
+                    row.appendChild(tabBadge);
+
+                    row.addEventListener('mousedown', (event) => {
+                        event.preventDefault();
+                        acceptAutocomplete(i);
+                    });
+
+                    listFrag.appendChild(row);
+                }
+
+                mathSuggestList.replaceChildren(listFrag);
+                mathSuggest.hidden = false;
+
+                // Position popup cleanly inside viewport
+                const editorRect = editor.getBoundingClientRect();
+                const popupRect = mathSuggest.getBoundingClientRect();
+
+                let left = editorRect.left + coords.x;
+                if (left + popupRect.width > window.innerWidth - 10) {
+                    left = Math.max(10, window.innerWidth - popupRect.width - 10);
+                }
+                left = Math.max(10, left);
+
+                let top = editorRect.top + coords.y + coords.lineHeight + 5;
+                if (top + popupRect.height > window.innerHeight - 10) {
+                    const aboveTop = editorRect.top + coords.y - popupRect.height - 5;
+                    if (aboveTop >= 10) {
+                        top = aboveTop;
+                    }
+                }
+
+                mathSuggest.style.left = left + 'px';
+                mathSuggest.style.top = top + 'px';
+
+                const activeRow = mathSuggestList.children[acState.selectedIndex];
+                if (activeRow) {
+                    activeRow.scrollIntoView({ block: 'nearest' });
+                }
+            }
+
+            function updateAutocomplete() {
+                if (!currentUser || document.body.classList.contains('signed-out') || editor.readOnly) {
+                    hideAutocomplete();
+                    return;
+                }
+
+                if (document.activeElement !== editor) {
+                    hideAutocomplete();
+                    return;
+                }
+
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                if (start !== end) {
+                    hideAutocomplete();
+                    return;
+                }
+
+                const text = editor.value;
+                if (!isInMathMode(text, start)) {
+                    acState.dismissedForTokenAt = null;
+                    hideAutocomplete();
+                    return;
+                }
+
+                const found = findCommandTokenBeforeCaret(text, start);
+                if (!found) {
+                    acState.dismissedForTokenAt = null;
+                    hideAutocomplete();
+                    return;
+                }
+
+                const dismissSig = found.tokenStart + ':' + found.token;
+                if (acState.dismissedForTokenAt === dismissSig) {
+                    hideAutocomplete();
+                    return;
+                }
+                acState.dismissedForTokenAt = null;
+
+                const matches = rankAndMatchCommands(found.token);
+                if (matches.length === 0) {
+                    hideAutocomplete();
+                    return;
+                }
+
+                // Preserve highlight if user is continuing to narrow the same token
+                let nextIndex = 0;
+                if (acState.active && acState.tokenStart === found.tokenStart && acState.matches[acState.selectedIndex]) {
+                    const prevCmd = acState.matches[acState.selectedIndex].cmd;
+                    const idx = matches.findIndex((m) => m.cmd === prevCmd);
+                    if (idx !== -1) nextIndex = idx;
+                }
+
+                acState.active = true;
+                acState.tokenStart = found.tokenStart;
+                acState.token = found.token;
+                acState.matches = matches;
+                acState.selectedIndex = nextIndex;
+
+                renderAutocompleteUI();
+            }
+
+            function acceptAutocomplete(indexOverride) {
+                if (!acState.active || acState.matches.length === 0) return false;
+
+                const idx = typeof indexOverride === 'number' ? indexOverride : acState.selectedIndex;
+                const chosen = acState.matches[idx] || acState.matches[0];
+                if (!chosen) return false;
+
+                const caretPos = editor.selectionStart;
+                const tokenStart = acState.tokenStart;
+                const insertText = chosen.insert;
+                const newCaretPos = tokenStart + insertText.length - (chosen.cursorBack || 0);
+
+                editor.focus();
+                editor.setSelectionRange(tokenStart, caretPos);
+
+                let insertedViaExec = false;
+                try {
+                    insertedViaExec = document.execCommand('insertText', false, insertText);
+                } catch (e) {
+                    insertedViaExec = false;
+                }
+                if (!insertedViaExec) {
+                    editor.setRangeText(insertText, tokenStart, caretPos, 'end');
+                }
+
+                editor.setSelectionRange(newCaretPos, newCaretPos);
+                commandUsageBoost.set(chosen.cmd, Math.min(30, (commandUsageBoost.get(chosen.cmd) || 0) + 5));
+
+                hideAutocomplete();
+                onEditorContentChanged();
+                return true;
+            }
+
+            /* ============================================================
+               7. Airtight Local + Cloud Document Sync
+               ============================================================ */
+            let currentUser = null;
+            let activeUserId = null;
+            let latestAccessToken = null;
+            let documentLoadId = 0;
+
+            let isDocumentReady = false;
+            let hasUnsavedChanges = false;
+            let hasUnresolvedConflict = false;
+            let needsCloudReconcile = false;
+            let docRevision = 0;
+            let lastSyncedContent = null;
+            let lastSyncedAt = null;
+
+            let localSaveTimer = null;
+            let cloudSaveTimer = null;
+            let retryTimer = null;
+            let retryAttempt = 0;
+            let isSavingToCloud = false;
+            let resaveQueued = false;
+            let activeSavePromise = null;
+            let lastFocusSyncCheckAt = 0;
+
+            function setStatus(text, titleText) {
+                status.textContent = text;
+                status.title = titleText || text;
+            }
+
+            function clearAllSaveTimers() {
+                if (localSaveTimer) {
+                    clearTimeout(localSaveTimer);
+                    localSaveTimer = null;
+                }
+                if (cloudSaveTimer) {
+                    clearTimeout(cloudSaveTimer);
+                    cloudSaveTimer = null;
+                }
+                if (retryTimer) {
+                    clearTimeout(retryTimer);
+                    retryTimer = null;
+                }
+            }
+
+            function hideSyncBanner() {
+                syncBanner.hidden = true;
+                syncBanner.replaceChildren();
+            }
+
+            function showCloudRetryBanner(message) {
+                syncBanner.replaceChildren();
+                syncBanner.className = 'pane-banner is-warn';
+
+                const textEl = document.createElement('span');
+                textEl.className = 'banner-text';
+                textEl.textContent = message;
+
+                const retryBtn = document.createElement('button');
+                retryBtn.type = 'button';
+                retryBtn.className = 'is-primary';
+                retryBtn.textContent = 'Retry Cloud Load';
+                retryBtn.addEventListener('click', () => {
+                    if (currentUser) loadUserDocument(currentUser);
+                });
+
+                syncBanner.appendChild(textEl);
+                syncBanner.appendChild(retryBtn);
+                syncBanner.hidden = false;
+            }
+
+            function showConflictBanner(cloudContent, localContent, cloudUpdatedAt) {
+                hasUnresolvedConflict = true;
+                syncBanner.replaceChildren();
+                syncBanner.className = 'pane-banner is-warn';
+
+                const textEl = document.createElement('span');
+                textEl.className = 'banner-text';
+                textEl.textContent = 'Local unsaved edits differ from a newer cloud version. Choose how to resolve without losing work:';
+
+                const keepLocalBtn = document.createElement('button');
+                keepLocalBtn.type = 'button';
+                keepLocalBtn.className = 'is-primary';
+                keepLocalBtn.textContent = 'Keep Local & Sync';
+                keepLocalBtn.addEventListener('click', () => {
+                    if (!currentUser) return;
+                    hasUnresolvedConflict = false;
+                    hasUnsavedChanges = true;
+                    docRevision++;
+                    hideSyncBanner();
+                    flushCloudSave();
+                });
+
+                const useCloudBtn = document.createElement('button');
+                useCloudBtn.type = 'button';
+                useCloudBtn.textContent = 'Use Cloud Version';
+                useCloudBtn.addEventListener('click', () => {
+                    if (!currentUser) return;
+                    // Save a safety copy of the discarded local draft just in case
+                    safeStorageSet('latex_editor_conflict_backup_' + currentUser.id, localContent);
+                    hasUnresolvedConflict = false;
+                    hasUnsavedChanges = false;
+                    lastSyncedContent = cloudContent;
+                    lastSyncedAt = cloudUpdatedAt || new Date().toISOString();
+                    docRevision++;
+                    editor.value = cloudContent;
+                    writeLocalSnapshot(currentUser.id, cloudContent, {
+                        dirty: false,
+                        updatedAt: lastSyncedAt,
+                        syncedContent: cloudContent,
+                        syncedAt: lastSyncedAt
+                    });
+                    hideSyncBanner();
+                    applyIncrementalPreviewRender(cloudContent, true);
+                    setStatus('Loaded cloud version (local backup saved)');
+                });
+
+                const mergeBothBtn = document.createElement('button');
+                mergeBothBtn.type = 'button';
+                mergeBothBtn.textContent = 'Keep Both';
+                mergeBothBtn.addEventListener('click', () => {
+                    if (!currentUser) return;
+                    const merged = localContent + '\n\n--- Cloud Version ---\n\n' + cloudContent;
+                    hasUnresolvedConflict = false;
+                    hasUnsavedChanges = true;
+                    docRevision++;
+                    editor.value = merged;
+                    hideSyncBanner();
+                    applyIncrementalPreviewRender(merged, true);
+                    flushCloudSave();
+                });
+
+                syncBanner.appendChild(textEl);
+                syncBanner.appendChild(keepLocalBtn);
+                syncBanner.appendChild(useCloudBtn);
+                syncBanner.appendChild(mergeBothBtn);
+                syncBanner.hidden = false;
+            }
+
+            function isAuthOrJwtError(error) {
+                if (!error) return false;
+                const msg = String(error.message || '').toLowerCase();
+                const code = String(error.code || '');
+                return error.status === 401 || code === 'PGRST301' || msg.includes('jwt') || msg.includes('expired') || msg.includes('unauthorized');
+            }
+
+            async function selectCloudDocumentWithAuthRetry(userId) {
+                let res = await supabaseClient
+                    .from('documents')
+                    .select('content, updated_at')
+                    .eq('user_id', userId)
+                    .maybeSingle();
+
+                if (res.error && isAuthOrJwtError(res.error)) {
+                    const { data: refreshed, error: refreshErr } = await supabaseClient.auth.refreshSession();
+                    if (!refreshErr && refreshed?.session) {
+                        latestAccessToken = refreshed.session.access_token || latestAccessToken;
+                        res = await supabaseClient
+                            .from('documents')
+                            .select('content, updated_at')
+                            .eq('user_id', userId)
+                            .maybeSingle();
+                    }
+                }
+
+                if (res.error) throw res.error;
+                return res.data;
+            }
+
+            async function upsertCloudDocumentWithAuthRetry(userId, content, updatedAt) {
+                let res = await supabaseClient
                     .from('documents')
                     .upsert({
                         user_id: userId,
                         content: content,
-                        updated_at: new Date().toISOString()
+                        updated_at: updatedAt
                     }, {
                         onConflict: 'user_id'
                     });
 
-                if (error) throw error;
+                if (res.error && isAuthOrJwtError(res.error)) {
+                    const { data: refreshed, error: refreshErr } = await supabaseClient.auth.refreshSession();
+                    if (!refreshErr && refreshed?.session) {
+                        latestAccessToken = refreshed.session.access_token || latestAccessToken;
+                        res = await supabaseClient
+                            .from('documents')
+                            .upsert({
+                                user_id: userId,
+                                content: content,
+                                updated_at: updatedAt
+                            }, {
+                                onConflict: 'user_id'
+                            });
+                    }
+                }
+
+                if (res.error) throw res.error;
             }
 
-            async function flushPendingSave() {
-                if (!currentUser || !isDocumentReady) return;
+            function flushLocalDraftSync() {
+                if (!currentUser || !isDocumentReady || hasUnresolvedConflict) return;
+                if (localSaveTimer) {
+                    clearTimeout(localSaveTimer);
+                    localSaveTimer = null;
+                }
+                writeLocalSnapshot(currentUser.id, editor.value, {
+                    dirty: hasUnsavedChanges || editor.value !== lastSyncedContent,
+                    updatedAt: new Date().toISOString()
+                });
+            }
 
+            function scheduleCloudRetry() {
+                if (retryTimer) return;
+                const delay = RETRY_DELAYS_MS[Math.min(retryAttempt - 1, RETRY_DELAYS_MS.length - 1)] || 30000;
+                retryTimer = setTimeout(() => {
+                    retryTimer = null;
+                    if (!currentUser || !isDocumentReady || hasUnresolvedConflict) return;
+                    if (needsCloudReconcile) {
+                        reconcileCloudAfterOffline();
+                    } else if (hasUnsavedChanges) {
+                        flushCloudSave();
+                    }
+                }, delay);
+            }
+
+            async function flushCloudSave() {
+                if (!currentUser || !isDocumentReady || hasUnresolvedConflict) return;
+
+                if (needsCloudReconcile) {
+                    await reconcileCloudAfterOffline();
+                    if (hasUnresolvedConflict || !hasUnsavedChanges) return;
+                }
+
+                if (cloudSaveTimer) {
+                    clearTimeout(cloudSaveTimer);
+                    cloudSaveTimer = null;
+                }
+
+                if (isSavingToCloud) {
+                    resaveQueued = true;
+                    return activeSavePromise;
+                }
+
+                isSavingToCloud = true;
+                activeSavePromise = (async () => {
+                    try {
+                        while (true) {
+                            resaveQueued = false;
+                            if (!currentUser || !isDocumentReady || hasUnresolvedConflict) break;
+
+                            const userId = currentUser.id;
+                            const targetRevision = docRevision;
+                            const textToSave = editor.value;
+                            const nowIso = new Date().toISOString();
+
+                            writeLocalSnapshot(userId, textToSave, {
+                                dirty: true,
+                                updatedAt: nowIso
+                            });
+
+                            if (textToSave === lastSyncedContent && !hasUnsavedChanges) {
+                                writeLocalSnapshot(userId, textToSave, {
+                                    dirty: false,
+                                    updatedAt: nowIso,
+                                    syncedContent: textToSave,
+                                    syncedAt: lastSyncedAt || nowIso
+                                });
+                                setStatus('Saved to cloud', 'Synced at ' + new Date().toLocaleTimeString());
+                                break;
+                            }
+
+                            setStatus('Saving to cloud...');
+                            await upsertCloudDocumentWithAuthRetry(userId, textToSave, nowIso);
+
+                            if (!currentUser || currentUser.id !== userId) break;
+
+                            lastSyncedContent = textToSave;
+                            lastSyncedAt = nowIso;
+                            retryAttempt = 0;
+                            if (retryTimer) {
+                                clearTimeout(retryTimer);
+                                retryTimer = null;
+                            }
+
+                            if (docRevision === targetRevision) {
+                                hasUnsavedChanges = false;
+                                writeLocalSnapshot(userId, textToSave, {
+                                    dirty: false,
+                                    updatedAt: nowIso,
+                                    syncedContent: textToSave,
+                                    syncedAt: nowIso
+                                });
+                                setStatus('Saved to cloud', 'Synced at ' + new Date().toLocaleTimeString());
+                                break;
+                            } else {
+                                writeLocalSnapshot(userId, editor.value, {
+                                    dirty: true,
+                                    updatedAt: new Date().toISOString(),
+                                    syncedContent: textToSave,
+                                    syncedAt: nowIso
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        retryAttempt++;
+                        const isOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+                        if (currentUser) {
+                            setStatus(
+                                isOffline
+                                    ? 'Offline — saved locally, will sync when online'
+                                    : 'Cloud save retrying, local copy saved: ' + (error?.message || 'Network error')
+                            );
+                        }
+                        scheduleCloudRetry();
+                        console.error('Cloud save failed:', error);
+                    } finally {
+                        isSavingToCloud = false;
+                        activeSavePromise = null;
+                        if (resaveQueued && currentUser && isDocumentReady && !hasUnresolvedConflict) {
+                            flushCloudSave();
+                        }
+                    }
+                })();
+
+                return activeSavePromise;
+            }
+
+            async function reconcileCloudAfterOffline() {
+                if (!currentUser || !isDocumentReady || !needsCloudReconcile) return;
                 const userId = currentUser.id;
-                const text = editor.value;
+                const revBefore = docRevision;
 
                 try {
-                    await persistDocument(userId, text);
+                    const data = await selectCloudDocumentWithAuthRetry(userId);
+                    if (!currentUser || currentUser.id !== userId) return;
 
-                    if (currentUser?.id === userId && editor.value === text) {
+                    needsCloudReconcile = false;
+                    const localSnap = readLocalSnapshot(userId);
+                    const currentLocal = editor.value;
+
+                    if (!data) {
+                        // Cloud has no row yet; upload local draft if non-empty or dirty
+                        await flushCloudSave();
+                        return;
+                    }
+
+                    const cloudContent = data.content ?? '';
+                    const cloudUpdatedAt = data.updated_at || new Date().toISOString();
+
+                    if (cloudContent === currentLocal) {
                         hasUnsavedChanges = false;
-                        status.textContent = 'Saved to cloud';
+                        lastSyncedContent = cloudContent;
+                        lastSyncedAt = cloudUpdatedAt;
+                        writeLocalSnapshot(userId, cloudContent, {
+                            dirty: false,
+                            updatedAt: cloudUpdatedAt,
+                            syncedContent: cloudContent,
+                            syncedAt: cloudUpdatedAt
+                        });
+                        setStatus('Saved to cloud');
+                        return;
                     }
-                } catch (error) {
-                    if (currentUser?.id === userId) {
-                        status.textContent = 'Cloud save failed, local copy saved: ' + error.message;
+
+                    const baseSynced = localSnap.meta ? localSnap.meta.syncedContent : undefined;
+
+                    if (!hasUnsavedChanges && docRevision === revBefore && (!localSnap.meta || !localSnap.meta.dirty)) {
+                        // Local had no unsaved changes; accept fresher cloud version
+                        lastSyncedContent = cloudContent;
+                        lastSyncedAt = cloudUpdatedAt;
+                        docRevision++;
+                        editor.value = cloudContent;
+                        writeLocalSnapshot(userId, cloudContent, {
+                            dirty: false,
+                            updatedAt: cloudUpdatedAt,
+                            syncedContent: cloudContent,
+                            syncedAt: cloudUpdatedAt
+                        });
+                        applyIncrementalPreviewRender(cloudContent, false);
+                        setStatus('Synced from cloud');
+                        return;
                     }
-                    console.error('Cloud save failed:', error);
+
+                    if (baseSynced !== undefined && cloudContent === baseSynced) {
+                        // Cloud did not change while offline -> safe to push local edits
+                        lastSyncedContent = baseSynced;
+                        hasUnsavedChanges = true;
+                        await flushCloudSave();
+                    } else {
+                        showConflictBanner(cloudContent, currentLocal, cloudUpdatedAt);
+                        setStatus('Sync conflict needs review');
+                    }
+                } catch (err) {
+                    retryAttempt++;
+                    scheduleCloudRetry();
                 }
             }
 
-            function scheduleSave() {
-                if (!currentUser || !isDocumentReady) return;
+            function scheduleSaves() {
+                if (!currentUser || !isDocumentReady || hasUnresolvedConflict) return;
 
+                docRevision++;
                 hasUnsavedChanges = true;
-                status.textContent = 'Typing...';
-                clearTimeout(saveTimeout);
+                setStatus('Typing...');
 
-                saveTimeout = setTimeout(() => {
-                    saveTimeout = null;
-                    flushPendingSave();
-                }, SAVE_DEBOUNCE_MS);
+                if (retryTimer) {
+                    clearTimeout(retryTimer);
+                    retryTimer = null;
+                }
+
+                // Fast debounced local backup
+                if (localSaveTimer) clearTimeout(localSaveTimer);
+                localSaveTimer = setTimeout(() => {
+                    localSaveTimer = null;
+                    flushLocalDraftSync();
+                }, LOCAL_SAVE_DEBOUNCE_MS);
+
+                // Debounced cloud backup
+                if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
+                cloudSaveTimer = setTimeout(() => {
+                    cloudSaveTimer = null;
+                    flushCloudSave();
+                }, CLOUD_SAVE_DEBOUNCE_MS);
+            }
+
+            function sendKeepaliveCloudFlush() {
+                if (!currentUser || !isDocumentReady || hasUnresolvedConflict || !hasUnsavedChanges) return;
+                if (!latestAccessToken || typeof fetch !== 'function') return;
+
+                const payload = JSON.stringify({
+                    user_id: currentUser.id,
+                    content: editor.value,
+                    updated_at: new Date().toISOString()
+                });
+
+                // Keepalive requests are capped around 64KB by browsers
+                if (payload.length > 60000) return;
+
+                const endpoint = SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/documents?on_conflict=user_id';
+                try {
+                    fetch(endpoint, {
+                        method: 'POST',
+                        keepalive: true,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': 'Bearer ' + latestAccessToken,
+                            'Prefer': 'resolution=merge-duplicates'
+                        },
+                        body: payload
+                    }).catch(() => {});
+                } catch (e) {
+                    // Ignore keepalive transport errors during unload
+                }
+            }
+
+            async function checkCloudUpdatesOnFocus() {
+                const now = Date.now();
+                if (now - lastFocusSyncCheckAt < FOCUS_SYNC_MIN_INTERVAL_MS) return;
+                if (!currentUser || !isDocumentReady || hasUnsavedChanges || isSavingToCloud || hasUnresolvedConflict) return;
+
+                if (needsCloudReconcile) {
+                    lastFocusSyncCheckAt = now;
+                    await reconcileCloudAfterOffline();
+                    return;
+                }
+
+                lastFocusSyncCheckAt = now;
+                const userId = currentUser.id;
+                const revBefore = docRevision;
+
+                try {
+                    const data = await selectCloudDocumentWithAuthRetry(userId);
+                    if (!currentUser || currentUser.id !== userId) return;
+                    if (hasUnsavedChanges || isSavingToCloud || hasUnresolvedConflict || docRevision !== revBefore) return;
+
+                    if (data && typeof data.content === 'string' && data.content !== editor.value) {
+                        const cloudContent = data.content;
+                        const cloudUpdatedAt = data.updated_at || new Date().toISOString();
+                        lastSyncedContent = cloudContent;
+                        lastSyncedAt = cloudUpdatedAt;
+                        docRevision++;
+                        editor.value = cloudContent;
+                        writeLocalSnapshot(userId, cloudContent, {
+                            dirty: false,
+                            updatedAt: cloudUpdatedAt,
+                            syncedContent: cloudContent,
+                            syncedAt: cloudUpdatedAt
+                        });
+                        applyIncrementalPreviewRender(cloudContent, false);
+                        setStatus('Updated from cloud');
+                    }
+                } catch (e) {
+                    // Silent check failure; do not disturb user
+                }
             }
 
             async function loadUserDocument(user) {
                 const thisLoadId = ++documentLoadId;
 
-                clearTimeout(saveTimeout);
-                saveTimeout = null;
+                clearAllSaveTimers();
+                hideSyncBanner();
                 isDocumentReady = false;
                 hasUnsavedChanges = false;
+                hasUnresolvedConflict = false;
+                needsCloudReconcile = false;
                 editor.readOnly = true;
-                status.textContent = 'Loading cloud document...';
+                setStatus('Loading cloud document...');
+
+                const localSnap = readLocalSnapshot(user.id);
+                const localContent = localSnap.content;
+                const localMeta = localSnap.meta;
 
                 try {
-                    const { data, error } = await supabaseClient
-                        .from('documents')
-                        .select('content')
-                        .eq('user_id', user.id)
-                        .maybeSingle();
-
-                    if (error) throw error;
+                    const data = await selectCloudDocumentWithAuthRetry(user.id);
                     if (currentUser?.id !== user.id || thisLoadId !== documentLoadId) return;
 
-                    let content;
-                    let migrated = false;
+                    let finalContent = '';
+                    let statusText = 'Ready to edit';
+                    let shouldPushDirtyLocal = false;
 
-                    if (data) {
-                        content = data.content ?? '';
+                    if (!data) {
+                        finalContent = localContent || '';
+                        lastSyncedContent = '';
+                        lastSyncedAt = null;
+
+                        if (finalContent.length > 0) {
+                            const nowIso = new Date().toISOString();
+                            await upsertCloudDocumentWithAuthRetry(user.id, finalContent, nowIso);
+                            if (currentUser?.id !== user.id || thisLoadId !== documentLoadId) return;
+                            lastSyncedContent = finalContent;
+                            lastSyncedAt = nowIso;
+                            writeLocalSnapshot(user.id, finalContent, {
+                                dirty: false,
+                                updatedAt: nowIso,
+                                syncedContent: finalContent,
+                                syncedAt: nowIso
+                            });
+                            statusText = 'Local document migrated to cloud';
+                        } else {
+                            writeLocalSnapshot(user.id, '', {
+                                dirty: false,
+                                updatedAt: new Date().toISOString(),
+                                syncedContent: '',
+                                syncedAt: null
+                            });
+                        }
                     } else {
-                        content = safeStorageGet(getLocalDocumentKey(user.id)) || '';
+                        const cloudContent = data.content ?? '';
+                        const cloudUpdatedAt = data.updated_at || new Date().toISOString();
+                        const hasDirtyLocal = Boolean(localMeta && localMeta.dirty && localContent !== null && localContent !== cloudContent);
 
-                        if (content.length > 0) {
-                            const { error: migrationError } = await supabaseClient
-                                .from('documents')
-                                .upsert({
-                                    user_id: user.id,
-                                    content: content,
-                                    updated_at: new Date().toISOString()
-                                }, {
-                                    onConflict: 'user_id'
-                                });
-
-                            if (migrationError) throw migrationError;
-                            migrated = true;
+                        if (hasDirtyLocal) {
+                            const baseSynced = localMeta.syncedContent;
+                            if (baseSynced !== undefined && cloudContent === baseSynced) {
+                                // Local draft was never uploaded and cloud is unchanged
+                                finalContent = localContent;
+                                lastSyncedContent = baseSynced;
+                                lastSyncedAt = localMeta.syncedAt || cloudUpdatedAt;
+                                shouldPushDirtyLocal = true;
+                                statusText = 'Syncing unsaved local draft...';
+                            } else {
+                                // Both local and cloud diverged -> let user resolve safely
+                                finalContent = localContent;
+                                lastSyncedContent = baseSynced !== undefined ? baseSynced : cloudContent;
+                                lastSyncedAt = cloudUpdatedAt;
+                                showConflictBanner(cloudContent, localContent, cloudUpdatedAt);
+                                statusText = 'Sync conflict needs review';
+                            }
+                        } else {
+                            finalContent = cloudContent;
+                            lastSyncedContent = cloudContent;
+                            lastSyncedAt = cloudUpdatedAt;
+                            writeLocalSnapshot(user.id, cloudContent, {
+                                dirty: false,
+                                updatedAt: cloudUpdatedAt,
+                                syncedContent: cloudContent,
+                                syncedAt: cloudUpdatedAt
+                            });
+                            statusText = 'Loaded from cloud';
                         }
                     }
 
                     if (currentUser?.id !== user.id || thisLoadId !== documentLoadId) return;
 
-                    editor.value = content;
-                    renderPreview();
+                    editor.value = finalContent;
+                    editor.readOnly = false;
                     isDocumentReady = true;
 
-                    if (migrated) {
-                        status.textContent = 'Local document migrated to cloud';
-                    } else if (data) {
-                        status.textContent = 'Loaded from cloud';
+                    if (isRenderEnabled) {
+                        applyIncrementalPreviewRender(finalContent, false);
                     } else {
-                        status.textContent = 'Ready to edit';
+                        clearRenderedPreview();
+                    }
+
+                    setStatus(statusText);
+
+                    if (shouldPushDirtyLocal) {
+                        hasUnsavedChanges = true;
+                        flushCloudSave();
                     }
                 } catch (error) {
-                    if (currentUser?.id === user.id && thisLoadId === documentLoadId) {
-                        editor.value = safeStorageGet(getLocalDocumentKey(user.id)) || '';
-                        renderPreview();
-                        isDocumentReady = true;
-                        status.textContent = 'Cloud load failed, using local copy: ' + error.message;
-                    }
-                } finally {
-                    if (currentUser?.id === user.id && thisLoadId === documentLoadId) {
+                    if (currentUser?.id !== user.id || thisLoadId !== documentLoadId) return;
+
+                    if (localContent !== null) {
+                        // Local backup exists -> allow offline editing and mark for safe cloud reconciliation
+                        editor.value = localContent;
                         editor.readOnly = false;
+                        isDocumentReady = true;
+                        needsCloudReconcile = true;
+                        hasUnsavedChanges = Boolean(localMeta && localMeta.dirty);
+                        lastSyncedContent = localMeta && typeof localMeta.syncedContent === 'string'
+                            ? localMeta.syncedContent
+                            : null;
+
+                        if (isRenderEnabled) {
+                            applyIncrementalPreviewRender(localContent, false);
+                        } else {
+                            clearRenderedPreview();
+                        }
+
+                        setStatus('Cloud unreachable — using local copy (will sync when online)');
+                        retryAttempt = 1;
+                        scheduleCloudRetry();
+                    } else {
+                        // Do NOT allow blank overwrite of an unseen cloud document
+                        editor.value = '';
+                        editor.readOnly = true;
+                        isDocumentReady = false;
+                        clearRenderedPreview();
+                        showCloudRetryBanner('Could not reach cloud to load your document. Your cloud data is safe.');
+                        setStatus('Cloud load failed: ' + (error?.message || 'Network error'));
                     }
                 }
             }
 
+            function onEditorContentChanged() {
+                schedulePreviewRender();
+                scheduleSaves();
+                updateAutocomplete();
+            }
+
             /* ============================================================
-               6. Authentication
+               8. Authentication
                ============================================================ */
             const supabaseClient = window.supabase
                 ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
@@ -777,21 +2878,21 @@
                     signOutBtn.disabled = true;
 
                     try {
-                        if (currentUser && isDocumentReady && hasUnsavedChanges) {
-                            clearTimeout(saveTimeout);
-                            saveTimeout = null;
-                            status.textContent = 'Saving before sign out...';
-                            await persistDocument(currentUser.id, editor.value).catch((err) => {
+                        flushLocalDraftSync();
+                        if (currentUser && isDocumentReady && hasUnsavedChanges && !hasUnresolvedConflict) {
+                            clearAllSaveTimers();
+                            setStatus('Saving before sign out...');
+                            await flushCloudSave().catch((err) => {
                                 console.error('Save before sign out failed:', err);
                             });
                         }
 
                         const { error } = await supabaseClient.auth.signOut({ scope: 'local' });
                         if (error) {
-                            status.textContent = error.message;
+                            setStatus(error.message);
                         }
                     } catch (error) {
-                        status.textContent = error.message || 'Sign out failed.';
+                        setStatus(error.message || 'Sign out failed.');
                     } finally {
                         signOutBtn.disabled = false;
                     }
@@ -802,6 +2903,7 @@
                     clearTimeout(authRevealTimer);
 
                     const nextUser = session?.user ?? null;
+                    latestAccessToken = session?.access_token ?? null;
 
                     if (nextUser) {
                         const isSameLoadedUser = activeUserId === nextUser.id;
@@ -812,14 +2914,13 @@
                         authMessage.textContent = '';
                         authPassword.value = '';
 
-                        // Only load the document on initial sign-in or account switch,
-                        // never on background events like TOKEN_REFRESHED.
                         if (!isSameLoadedUser) {
                             activeUserId = nextUser.id;
                             isDocumentReady = false;
                             hasUnsavedChanges = false;
-                            clearTimeout(saveTimeout);
-                            saveTimeout = null;
+                            hasUnresolvedConflict = false;
+                            needsCloudReconcile = false;
+                            clearAllSaveTimers();
                             editor.readOnly = true;
 
                             setTimeout(() => {
@@ -830,33 +2931,40 @@
                         }
                     } else {
                         documentLoadId++;
-                        clearTimeout(saveTimeout);
-                        saveTimeout = null;
+                        clearAllSaveTimers();
+                        hideSyncBanner();
+                        hideAutocomplete();
+                        closePdfModal();
 
                         currentUser = null;
                         activeUserId = null;
                         isDocumentReady = false;
                         hasUnsavedChanges = false;
+                        hasUnresolvedConflict = false;
+                        needsCloudReconcile = false;
+                        lastSyncedContent = null;
+                        lastSyncedAt = null;
 
                         document.body.classList.add('signed-out');
                         authPanel.hidden = false;
 
                         editor.readOnly = false;
                         editor.value = '';
-                        preview.replaceChildren();
+                        clearRenderedPreview();
 
                         authMessage.textContent = '';
                         authPassword.value = '';
-                        status.textContent = 'Signed out';
+                        setStatus('Signed out');
                     }
                 });
             }
 
             /* ============================================================
-               7. Full-Preview PNG Export
+               9. Shared Export Loaders + Full-Preview PNG Export
                ============================================================ */
-            let exporting = false;
+            let exportingPng = false;
             let html2canvasPromise = null;
+            let jsPdfPromise = null;
 
             function loadHtml2Canvas() {
                 if (typeof window.html2canvas === 'function') {
@@ -871,11 +2979,11 @@
                             if (typeof window.html2canvas === 'function') {
                                 resolve(window.html2canvas);
                             } else {
-                                reject(new Error('The PNG renderer loaded but was not available.'));
+                                reject(new Error('The renderer loaded but was not available.'));
                             }
                         };
                         script.onerror = () => reject(
-                            new Error('Could not load the PNG renderer. Check your internet connection and try again.')
+                            new Error('Could not load the image renderer. Check your internet connection and try again.')
                         );
                         document.head.appendChild(script);
                     }).catch((error) => {
@@ -887,28 +2995,79 @@
                 return html2canvasPromise;
             }
 
-            function chooseExportScale(width, height) {
+            function loadJsPdf() {
+                const existing = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+                if (typeof existing === 'function') {
+                    return Promise.resolve(existing);
+                }
+
+                if (!jsPdfPromise) {
+                    jsPdfPromise = new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdn.jsdelivr.net/npm/jspdf@3.0.4/dist/jspdf.umd.min.js';
+                        script.onload = () => {
+                            const ctor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+                            if (typeof ctor === 'function') {
+                                resolve(ctor);
+                            } else {
+                                reject(new Error('The PDF library loaded but was not available.'));
+                            }
+                        };
+                        script.onerror = () => reject(
+                            new Error('Could not load the PDF library. Check your internet connection and try again.')
+                        );
+                        document.head.appendChild(script);
+                    }).catch((error) => {
+                        jsPdfPromise = null;
+                        throw error;
+                    });
+                }
+
+                return jsPdfPromise;
+            }
+
+            function chooseExportScale(width, height, preferredScale = EXPORT_SCALE) {
                 const scaleForWidth = MAX_CANVAS_DIMENSION / width;
                 const scaleForHeight = MAX_CANVAS_DIMENSION / height;
                 const scaleForPixelCount = Math.sqrt(MAX_CANVAS_PIXELS / (width * height));
-                return Math.min(EXPORT_SCALE, scaleForWidth, scaleForHeight, scaleForPixelCount);
+                return Math.min(preferredScale, scaleForWidth, scaleForHeight, scaleForPixelCount);
             }
 
-            function createExportClone() {
+            function createExportSurfaceClone(options) {
+                const opts = options || {};
                 const previewBounds = preview.getBoundingClientRect();
                 const previewStyles = getComputedStyle(preview);
-                const clone = preview.cloneNode(true);
+                const widthPx = opts.widthPx || Math.max(320, Math.ceil(previewBounds.width));
+                const backgroundColor = opts.backgroundColor || previewStyles.backgroundColor;
+                const textColor = opts.textColor || previewStyles.color;
+                const fontSizePx = opts.fontSizePx ? opts.fontSizePx + 'px' : previewStyles.fontSize;
+                const padding = typeof opts.padding === 'string' ? opts.padding : previewStyles.padding;
 
-                // Avoid duplicate #preview IDs while keeping .preview-surface styles
-                clone.removeAttribute('id');
-                clone.classList.add('preview-export-clone');
+                const clone = document.createElement('div');
+                clone.className = 'preview-surface preview-export-clone';
                 clone.dataset.previewExportClone = 'true';
+
+                if (opts.docTitle) {
+                    const heading = document.createElement('div');
+                    heading.textContent = opts.docTitle;
+                    heading.style.fontSize = '1.45em';
+                    heading.style.fontWeight = '700';
+                    heading.style.marginBottom = '14px';
+                    heading.style.paddingBottom = '8px';
+                    heading.style.borderBottom = '1px solid ' + (opts.titleBorderColor || '#cccccc');
+                    clone.appendChild(heading);
+                }
+
+                const contentContainer = document.createElement('div');
+                contentContainer.style.display = 'contents';
+                renderAllSynchronouslyInto(contentContainer, editor.value);
+                clone.appendChild(contentContainer);
 
                 const overrides = {
                     position: 'fixed',
                     left: '0px',
                     top: '0px',
-                    width: Math.ceil(previewBounds.width) + 'px',
+                    width: widthPx + 'px',
                     height: 'auto',
                     'max-height': 'none',
                     overflow: 'visible',
@@ -916,12 +3075,15 @@
                     flex: 'none',
                     'min-height': '0',
                     margin: '0',
+                    padding: padding,
                     opacity: '0',
                     'z-index': '-2147483648',
                     'pointer-events': 'none',
-                    background: previewStyles.backgroundColor,
-                    color: previewStyles.color,
+                    background: backgroundColor,
+                    color: textColor,
+                    'font-size': fontSizePx,
                     'border-left-color': 'transparent',
+                    'border-left-width': '0px',
                     transition: 'none',
                     'box-sizing': 'border-box'
                 };
@@ -947,20 +3109,20 @@
             }
 
             async function exportPreviewAsPng() {
-                if (exporting || !currentUser) return;
-                exporting = true;
+                if (exportingPng || !currentUser) return;
+                exportingPng = true;
                 exportBtn.disabled = true;
 
                 let clone = null;
                 try {
-                    status.textContent = 'Preparing preview...';
+                    setStatus('Preparing PNG preview...');
                     const html2canvas = await loadHtml2Canvas();
 
                     if (document.fonts && document.fonts.ready) {
                         await document.fonts.ready;
                     }
 
-                    clone = createExportClone();
+                    clone = createExportSurfaceClone();
                     await new Promise((resolve) => requestAnimationFrame(resolve));
 
                     const bounds = clone.getBoundingClientRect();
@@ -971,12 +3133,12 @@
                         throw new Error('The preview has no exportable dimensions.');
                     }
 
-                    const scale = chooseExportScale(width, height);
+                    const scale = chooseExportScale(width, height, EXPORT_SCALE);
                     if (!Number.isFinite(scale) || scale <= 0) {
                         throw new Error('The preview is too large for this browser to export as one image.');
                     }
 
-                    status.textContent = 'Capturing full preview...';
+                    setStatus('Capturing full preview...');
                     const canvas = await html2canvas(clone, {
                         backgroundColor: getComputedStyle(preview).backgroundColor,
                         scale,
@@ -995,12 +3157,12 @@
                             const exportClone = clonedDocument.querySelector('[data-preview-export-clone="true"]');
                             if (exportClone) {
                                 exportClone.style.setProperty('opacity', '1', 'important');
-                                exportClone.style.setProperty('z-index', '2147483647', 'important');
+                                exportClone.style.setProperty('z-index','2147483647', 'important');
                             }
                         }
                     });
 
-                    status.textContent = 'Saving PNG...';
+                    setStatus('Saving PNG...');
                     const blob = await canvasToBlob(canvas);
                     const objectUrl = URL.createObjectURL(blob);
                     const link = document.createElement('a');
@@ -1013,47 +3175,632 @@
 
                     const dimensions = canvas.width.toLocaleString() + ' × ' + canvas.height.toLocaleString() + ' px';
                     const scaleNote = scale < 1 ? ' (scaled down to fit browser limits)' : '';
-                    status.textContent = 'Exported full preview: ' + dimensions + scaleNote;
+                    setStatus('Exported full preview: ' + dimensions + scaleNote);
                 } catch (error) {
                     console.error('Preview PNG export failed:', error);
-                    status.textContent = 'Export failed: ' + error.message;
+                    setStatus('Export failed: ' + error.message);
                 } finally {
                     if (clone) clone.remove();
-                    exporting = false;
+                    exportingPng = false;
                     exportBtn.disabled = false;
                 }
             }
 
             /* ============================================================
-               8. Initialization & Event Listeners
+               10. Configurable PDF Export Modal & Smart Pagination
+               ============================================================ */
+            const PAGE_SIZES_PT = {
+                letter: [612, 792],
+                a4: [595.28, 841.89],
+                legal: [612, 1008],
+                a5: [419.53, 595.28]
+            };
+
+            const MARGIN_MM_MAP = {
+                normal: 20,
+                narrow: 10,
+                wide: 30,
+                none: 0
+            };
+
+            let exportingPdf = false;
+            let lastFocusedBeforeModal = null;
+
+            function mmToPt(mm) {
+                return mm * 2.83464567;
+            }
+
+            function parseRgbColor(cssColor, fallback) {
+                const match = String(cssColor || '').match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+                if (!match) return fallback;
+                return {
+                    r: Number(match[1]),
+                    g: Number(match[2]),
+                    b: Number(match[3])
+                };
+            }
+
+            function getPdfOptionsFromForm() {
+                const cleanName = (pdfFileName.value || 'latex-notebook')
+                    .trim()
+                    .replace(/\.pdf$/i, '')
+                    .replace(/[\\/:*?"<>|]+/g, '-') || 'latex-notebook';
+
+                return {
+                    fileName: cleanName,
+                    docTitle: pdfDocTitle.value.trim(),
+                    pageSize: PAGE_SIZES_PT[pdfPageSize.value] ? pdfPageSize.value : 'letter',
+                    orientation: pdfOrientation.value === 'landscape' ? 'landscape' : 'portrait',
+                    margins: Object.prototype.hasOwnProperty.call(MARGIN_MM_MAP, pdfMargins.value) ? pdfMargins.value : 'normal',
+                    theme: pdfTheme.value === 'current' ? 'current' : 'light',
+                    fontSize: Number(pdfFontSize.value) || 15,
+                    quality: Number(pdfQuality.value) === 2 ? 2 : 3,
+                    pageNumbers: Boolean(pdfPageNumbers.checked)
+                };
+            }
+
+            function savePdfOptionPreferences() {
+                const opts = getPdfOptionsFromForm();
+                safeStorageSet(STORAGE_PDF_OPTS_KEY, JSON.stringify({
+                    pageSize: opts.pageSize,
+                    orientation: opts.orientation,
+                    margins: opts.margins,
+                    theme: opts.theme,
+                    fontSize: opts.fontSize,
+                    quality: opts.quality,
+                    pageNumbers: opts.pageNumbers
+                }));
+            }
+
+            function loadPdfOptionPreferences() {
+                const raw = safeStorageGet(STORAGE_PDF_OPTS_KEY);
+                if (!raw) return;
+                try {
+                    const saved = JSON.parse(raw);
+                    if (saved.pageSize && PAGE_SIZES_PT[saved.pageSize]) pdfPageSize.value = saved.pageSize;
+                    if (saved.orientation) pdfOrientation.value = saved.orientation;
+                    if (saved.margins && Object.prototype.hasOwnProperty.call(MARGIN_MM_MAP, saved.margins)) pdfMargins.value = saved.margins;
+                    if (saved.theme) pdfTheme.value = saved.theme;
+                    if (saved.fontSize) pdfFontSize.value = String(saved.fontSize);
+                    if (saved.quality) pdfQuality.value = String(saved.quality);
+                    if (typeof saved.pageNumbers === 'boolean') pdfPageNumbers.checked = saved.pageNumbers;
+                } catch (e) {
+                    // Ignore malformed saved PDF preferences
+                }
+            }
+
+            function updatePdfSummary() {
+                const opts = getPdfOptionsFromForm();
+                const sizeLabels = { letter: 'Letter', a4: 'A4', legal: 'Legal', a5: 'A5' };
+                const marginLabel = MARGIN_MM_MAP[opts.margins] + ' mm margins';
+                const themeLabel = opts.theme === 'light' ? 'Light theme' : (currentTheme() === 'dark' ? 'Dark theme' : 'Light theme');
+                const orientLabel = opts.orientation === 'landscape' ? 'Landscape' : 'Portrait';
+                pdfSummary.textContent = [
+                    sizeLabels[opts.pageSize],
+                    orientLabel,
+                    marginLabel,
+                    themeLabel,
+                    opts.fontSize + ' px text',
+                    opts.quality + '× resolution'
+                ].join(' · ');
+            }
+
+            function openPdfModal() {
+                if (!currentUser || document.body.classList.contains('signed-out')) return;
+                hideAutocomplete();
+                lastFocusedBeforeModal = document.activeElement;
+                updatePdfSummary();
+                pdfModalBackdrop.hidden = false;
+                pdfFileName.focus();
+                pdfFileName.select();
+
+                // Pre-warm PDF/Canvas libraries while the user configures options
+                loadHtml2Canvas().catch(() => {});
+                loadJsPdf().catch(() => {});
+            }
+
+            function closePdfModal() {
+                if (pdfModalBackdrop.hidden) return;
+                pdfModalBackdrop.hidden = true;
+                if (lastFocusedBeforeModal && typeof lastFocusedBeforeModal.focus === 'function') {
+                    lastFocusedBeforeModal.focus();
+                }
+                lastFocusedBeforeModal = null;
+            }
+
+            function collectIndivisibleLineBoxes(container) {
+                const containerRect = container.getBoundingClientRect();
+                const baseTop = containerRect.top;
+                const boxes = [];
+
+                // Treat every KaTeX display/inline formula as an indivisible vertical unit
+                const katexNodes = container.querySelectorAll('.katex-display, .katex');
+                for (let i = 0; i < katexNodes.length; i++) {
+                    const el = katexNodes[i];
+                    if (el.classList.contains('katex') && el.closest('.katex-display')) continue;
+                    const r = el.getBoundingClientRect();
+                    if (r.height > 0) {
+                        boxes.push({
+                            top: r.top - baseTop,
+                            bottom: r.bottom - baseTop
+                        });
+                    }
+                }
+
+                // Walk plain text nodes outside .katex to detect individual visual line rects
+                const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+                    acceptNode: (node) => {
+                        if (!node.nodeValue || !node.nodeValue.trim()) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        if (node.parentElement && node.parentElement.closest('.katex')) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                });
+
+                const range = document.createRange();
+                let currentNode;
+                while ((currentNode = walker.nextNode())) {
+                    range.selectNodeContents(currentNode);
+                    const rects = range.getClientRects();
+                    for (let i = 0; i < rects.length; i++) {
+                        const r = rects[i];
+                        if (r.height > 0) {
+                            boxes.push({
+                                top: r.top - baseTop,
+                                bottom: r.bottom - baseTop
+                            });
+                        }
+                    }
+                }
+
+                return boxes;
+            }
+
+            function computeSmartPageSlices(totalHeight, pageContentHeightPx, boxes) {
+                const slices = [];
+                let currentTop = 0;
+                const minAdvance = Math.max(36, Math.floor(pageContentHeightPx * 0.2));
+
+                while (currentTop < totalHeight - 2) {
+                    const idealEnd = Math.min(totalHeight, currentTop + pageContentHeightPx);
+                    if (idealEnd >= totalHeight - 2) {
+                        slices.push({
+                            y: currentTop,
+                            height: Math.max(1, totalHeight - currentTop)
+                        });
+                        break;
+                    }
+
+                    let chosenEnd = idealEnd;
+                    for (let i = 0; i < boxes.length; i++) {
+                        const b = boxes[i];
+                        if (b.top < idealEnd - 1 && b.bottom > idealEnd + 1) {
+                            const candidateTop = Math.floor(b.top) - 2;
+                            if (candidateTop - currentTop >= minAdvance && candidateTop < chosenEnd) {
+                                chosenEnd = candidateTop;
+                            }
+                        }
+                    }
+
+                    const sliceHeight = Math.max(minAdvance, chosenEnd - currentTop);
+                    slices.push({ y: currentTop, height: sliceHeight });
+                    currentTop += sliceHeight;
+                }
+
+                return slices.length > 0 ? slices : [{ y: 0, height: Math.max(1, totalHeight) }];
+            }
+
+            async function captureSingleCanvasForPdfSlice(clone, width, slice, scale, bgColor) {
+                const html2canvas = window.html2canvas;
+                const viewport = document.createElement('div');
+                viewport.dataset.pdfSliceViewport = 'true';
+                viewport.style.cssText = [
+                    'position: fixed',
+                    'left: 0',
+                    'top: 0',
+                    'width: ' + width + 'px',
+                    'height: ' + Math.ceil(slice.height) + 'px',
+                    'overflow: hidden',
+                    'background: ' + bgColor,
+                    'opacity: 0',
+                    'z-index: -2147483648',
+                    'pointer-events: none',
+                    'box-sizing: border-box'
+                ].join(';');
+
+                const cloneCopy = clone.cloneNode(true);
+                cloneCopy.dataset.pdfSliceClone = 'true';
+                cloneCopy.style.setProperty('position', 'absolute', 'important');
+                cloneCopy.style.setProperty('left', '0px', 'important');
+                cloneCopy.style.setProperty('top', (-slice.y) + 'px', 'important');
+                cloneCopy.style.setProperty('opacity', '1', 'important');
+                cloneCopy.style.setProperty('z-index', '1', 'important');
+
+                viewport.appendChild(cloneCopy);
+                document.body.appendChild(viewport);
+
+                try {
+                    return await html2canvas(viewport, {
+                        backgroundColor: bgColor,
+                        scale,
+                        width,
+                        height: Math.ceil(slice.height),
+                        x: 0,
+                        y: 0,
+                        windowWidth: Math.max(document.documentElement.clientWidth, width),
+                        windowHeight: Math.max(window.innerHeight, Math.ceil(slice.height)),
+                        scrollX: 0,
+                        scrollY: 0,
+                        useCORS: true,
+                        allowTaint: false,
+                        logging: false,
+                        onclone: (clonedDoc) => {
+                            const vp = clonedDoc.querySelector('[data-pdf-slice-viewport="true"]');
+                            if (vp) {
+                                vp.style.setProperty('opacity', '1', 'important');
+                                vp.style.setProperty('z-index', '2147483647', 'important');
+                            }
+                        }
+                    });
+                } finally {
+                    viewport.remove();
+                }
+            }
+
+            async function exportPreviewAsPdf(event) {
+                if (event) event.preventDefault();
+                if (exportingPdf || !currentUser) return;
+
+                savePdfOptionPreferences();
+                const opts = getPdfOptionsFromForm();
+
+                exportingPdf = true;
+                pdfConfirmBtn.disabled = true;
+                pdfCancelBtn.disabled = true;
+                exportPdfBtn.disabled = true;
+                const origBtnText = pdfConfirmBtn.textContent;
+                pdfConfirmBtn.textContent = 'Generating...';
+
+                let clone = null;
+                try {
+                    setStatus('Loading PDF export tools...');
+                    const [html2canvas, JsPDF] = await Promise.all([loadHtml2Canvas(), loadJsPdf()]);
+
+                    if (document.fonts && document.fonts.ready) {
+                        await document.fonts.ready;
+                    }
+
+                    const baseDims = PAGE_SIZES_PT[opts.pageSize];
+                    const pageW = opts.orientation === 'landscape' ? baseDims[1] : baseDims[0];
+                    const pageH = opts.orientation === 'landscape' ? baseDims[0] : baseDims[1];
+                    const marginPt = mmToPt(MARGIN_MM_MAP[opts.margins]);
+                    const printableW = Math.max(72, pageW - marginPt * 2);
+                    const printableH = Math.max(72, pageH - marginPt * 2);
+
+                    // Render CSS width at standard 96 CSS px per inch (72 pt = 96 px)
+                    const cssWidth = Math.round(printableW * (96 / 72));
+                    const pageContentHeightPx = printableH * (cssWidth / printableW);
+
+                    const useLightTheme = opts.theme === 'light';
+                    const previewStyles = getComputedStyle(preview);
+                    const bgColor = useLightTheme ? '#ffffff' : previewStyles.backgroundColor;
+                    const textColor = useLightTheme ? '#222222' : previewStyles.color;
+                    const bgRgb = useLightTheme
+                        ? { r: 255, g: 255, b: 255 }
+                        : parseRgbColor(bgColor, { r: 33, g: 33, b: 33 });
+                    const isDarkPdf = (bgRgb.r * 0.299 + bgRgb.g * 0.587 + bgRgb.b * 0.114) < 128;
+                    const footerRgb = isDarkPdf ? { r: 165, g: 165, b: 165 } : { r: 120, g: 120, b: 120 };
+
+                    setStatus('Laying out PDF pages...');
+                    clone = createExportSurfaceClone({
+                        widthPx: cssWidth,
+                        backgroundColor: bgColor,
+                        textColor: textColor,
+                        fontSizePx: opts.fontSize,
+                        padding: opts.margins === 'none' ? '20px' : '0px',
+                        docTitle: opts.docTitle,
+                        titleBorderColor: isDarkPdf ? '#444444' : '#d4d4d4'
+                    });
+
+                    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+                    const bounds = clone.getBoundingClientRect();
+                    const totalWidth = Math.max(cssWidth, Math.ceil(bounds.width));
+                    const totalHeight = Math.max(1, Math.ceil(Math.max(bounds.height, clone.scrollHeight)));
+                    const lineBoxes = collectIndivisibleLineBoxes(clone);
+                    const slices = computeSmartPageSlices(totalHeight, pageContentHeightPx, lineBoxes);
+
+                    const doc = new JsPDF({
+                        orientation: opts.orientation,
+                        unit: 'pt',
+                        format: opts.pageSize,
+                        compress: true
+                    });
+
+                    const canCaptureSingleCanvas =
+                        (totalHeight * opts.quality) <= MAX_CANVAS_DIMENSION &&
+                        (totalWidth * opts.quality) <= MAX_CANVAS_DIMENSION &&
+                        (totalWidth * totalHeight * opts.quality * opts.quality) <= MAX_CANVAS_PIXELS;
+
+                    if (canCaptureSingleCanvas) {
+                        setStatus('Rendering PDF content (' + slices.length + (slices.length === 1 ? ' page' : ' pages') + ')...');
+                        const fullCanvas = await html2canvas(clone, {
+                            backgroundColor: bgColor,
+                            scale: opts.quality,
+                            width: totalWidth,
+                            height: totalHeight,
+                            x: 0,
+                            y: 0,
+                            windowWidth: Math.max(document.documentElement.clientWidth, totalWidth),
+                            windowHeight: Math.max(window.innerHeight, totalHeight),
+                            scrollX: 0,
+                            scrollY: 0,
+                            useCORS: true,
+                            allowTaint: false,
+                            logging: false,
+                            onclone: (clonedDoc) => {
+                                const exportClone = clonedDoc.querySelector('[data-preview-export-clone="true"]');
+                                if (exportClone) {
+                                    exportClone.style.setProperty('opacity', '1', 'important');
+                                    exportClone.style.setProperty('z-index', '2147483647', 'important');
+                                }
+                            }
+                        });
+
+                        const pageCanvas = document.createElement('canvas');
+                        const ctx = pageCanvas.getContext('2d');
+                        const srcWidthPx = fullCanvas.width;
+
+                        for (let i = 0; i < slices.length; i++) {
+                            if (i > 0) doc.addPage();
+                            doc.setFillColor(bgRgb.r, bgRgb.g, bgRgb.b);
+                            doc.rect(0, 0, pageW, pageH, 'F');
+
+                            const slice = slices[i];
+                            const srcY = Math.max(0, Math.round(slice.y * opts.quality));
+                            const srcH = Math.max(1, Math.min(fullCanvas.height - srcY, Math.round(slice.height * opts.quality)));
+
+                            pageCanvas.width = srcWidthPx;
+                            pageCanvas.height = srcH;
+                            ctx.fillStyle = bgColor;
+                            ctx.fillRect(0, 0, srcWidthPx, srcH);
+                            ctx.drawImage(fullCanvas, 0, srcY, srcWidthPx, srcH, 0, 0, srcWidthPx, srcH);
+
+                            const imgData = pageCanvas.toDataURL('image/png');
+                            const renderHeightPt = (slice.height / totalWidth) * printableW;
+                            doc.addImage(imgData, 'PNG', marginPt, marginPt, printableW, renderHeightPt, undefined, 'FAST');
+
+                            if (opts.pageNumbers) {
+                                doc.setFont('helvetica', 'normal');
+                                doc.setFontSize(9);
+                                doc.setTextColor(footerRgb.r, footerRgb.g, footerRgb.b);
+                                doc.text(
+                                    'Page ' + (i + 1) + ' of ' + slices.length,
+                                    pageW / 2,
+                                    pageH - Math.max(12, marginPt * 0.5),
+                                    { align: 'center' }
+                                );
+                            }
+                        }
+                    } else {
+                        const perPageScale = Math.min(opts.quality, chooseExportScale(totalWidth, pageContentHeightPx, opts.quality));
+                        for (let i = 0; i < slices.length; i++) {
+                            setStatus('Rendering PDF page ' + (i + 1) + ' of ' + slices.length + '...');
+                            if (i > 0) doc.addPage();
+                            doc.setFillColor(bgRgb.r, bgRgb.g, bgRgb.b);
+                            doc.rect(0, 0, pageW, pageH, 'F');
+
+                            const slice = slices[i];
+                            const sliceCanvas = await captureSingleCanvasForPdfSlice(clone, totalWidth, slice, perPageScale, bgColor);
+                            const imgData = sliceCanvas.toDataURL('image/png');
+                            const renderHeightPt = (slice.height / totalWidth) * printableW;
+                            doc.addImage(imgData, 'PNG', marginPt, marginPt, printableW, renderHeightPt, undefined, 'FAST');
+
+                            if (opts.pageNumbers) {
+                                doc.setFont('helvetica', 'normal');
+                                doc.setFontSize(9);
+                                doc.setTextColor(footerRgb.r, footerRgb.g, footerRgb.b);
+                                doc.text(
+                                    'Page ' + (i + 1) + ' of ' + slices.length,
+                                    pageW / 2,
+                                    pageH - Math.max(12, marginPt * 0.5),
+                                    { align: 'center' }
+                                );
+                            }
+                        }
+                    }
+
+                    setStatus('Saving PDF...');
+                    doc.save(opts.fileName + '.pdf');
+                    closePdfModal();
+                    setStatus('Exported PDF (' + slices.length + (slices.length === 1 ? ' page)' : ' pages)'));
+                } catch (error) {
+                    console.error('PDF export failed:', error);
+                    setStatus('PDF export failed: ' + error.message);
+                } finally {
+                    if (clone) clone.remove();
+                    exportingPdf = false;
+                    pdfConfirmBtn.disabled = false;
+                    pdfCancelBtn.disabled = false;
+                    exportPdfBtn.disabled = false;
+                    pdfConfirmBtn.textContent = origBtnText;
+                }
+            }
+
+            function initPdfModal() {
+                loadPdfOptionPreferences();
+                updatePdfSummary();
+
+                exportPdfBtn.addEventListener('click', openPdfModal);
+                pdfModalCloseBtn.addEventListener('click', () => {
+                    if (!exportingPdf) closePdfModal();
+                });
+                pdfCancelBtn.addEventListener('click', () => {
+                    if (!exportingPdf) closePdfModal();
+                });
+                pdfModalBackdrop.addEventListener('click', (event) => {
+                    if (event.target === pdfModalBackdrop && !exportingPdf) {
+                        closePdfModal();
+                    }
+                });
+
+                [pdfFileName, pdfDocTitle, pdfPageSize, pdfOrientation, pdfMargins, pdfTheme, pdfFontSize, pdfQuality, pdfPageNumbers]
+                    .forEach((el) => el.addEventListener('change', updatePdfSummary));
+                pdfFileName.addEventListener('input', updatePdfSummary);
+
+                pdfExportForm.addEventListener('submit', exportPreviewAsPdf);
+            }
+
+            /* ============================================================
+               11. Initialization & Event Listeners
                ============================================================ */
             initFontPicker();
             initThemeToggle();
+            initRenderToggle();
+            initPdfModal();
             initAuth();
 
-            editor.addEventListener('input', () => {
-                renderPreview();
-                scheduleSave();
+            editor.addEventListener('input', onEditorContentChanged);
+
+            editor.addEventListener('keydown', (event) => {
+                if (acState.active && acState.matches.length > 0) {
+                    if (event.key === 'Tab' && !event.ctrlKey && !event.metaKey && !event.altKey) {
+                        event.preventDefault();
+                        acceptAutocomplete();
+                        return;
+                    }
+                    if (event.key === 'ArrowDown') {
+                        event.preventDefault();
+                        acState.selectedIndex = (acState.selectedIndex + 1) % acState.matches.length;
+                        renderAutocompleteUI();
+                        return;
+                    }
+                    if (event.key === 'ArrowUp') {
+                        event.preventDefault();
+                        acState.selectedIndex = (acState.selectedIndex - 1 + acState.matches.length) % acState.matches.length;
+                        renderAutocompleteUI();
+                        return;
+                    }
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        acState.dismissedForTokenAt = acState.tokenStart + ':' + acState.token;
+                        hideAutocomplete();
+                        return;
+                    }
+                }
+            });
+
+            editor.addEventListener('keyup', (event) => {
+                if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+                    updateAutocomplete();
+                }
+            });
+
+            editor.addEventListener('click', updateAutocomplete);
+            editor.addEventListener('scroll', () => {
+                if (acState.active) renderAutocompleteUI();
+            });
+            editor.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (document.activeElement !== editor) {
+                        hideAutocomplete();
+                    }
+                }, 120);
+            });
+
+            window.addEventListener('resize', () => {
+                if (acState.active) renderAutocompleteUI();
             });
 
             // Re-render once deferred KaTeX scripts finish before DOMContentLoaded
-            document.addEventListener('DOMContentLoaded', renderPreview);
+            document.addEventListener('DOMContentLoaded', () => {
+                if (currentUser && isDocumentReady && isRenderEnabled) {
+                    applyIncrementalPreviewRender(editor.value, true);
+                }
+            });
 
-            // Flush unsaved edits locally & to cloud if the user hides/leaves the page
+            // Flush unsaved edits locally & to cloud if the user hides or closes the page
             document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'hidden' && currentUser && isDocumentReady && hasUnsavedChanges) {
-                    clearTimeout(saveTimeout);
-                    saveTimeout = null;
-                    flushPendingSave();
+                if (document.visibilityState === 'hidden') {
+                    flushLocalDraftSync();
+                    if (currentUser && isDocumentReady && hasUnsavedChanges && !hasUnresolvedConflict) {
+                        clearTimeout(cloudSaveTimer);
+                        cloudSaveTimer = null;
+                        flushCloudSave();
+                    }
+                } else if (document.visibilityState === 'visible') {
+                    checkCloudUpdatesOnFocus();
+                }
+            });
+
+            window.addEventListener('pagehide', () => {
+                flushLocalDraftSync();
+                sendKeepaliveCloudFlush();
+            });
+
+            window.addEventListener('beforeunload', (event) => {
+                flushLocalDraftSync();
+                const online = typeof navigator === 'undefined' || navigator.onLine !== false;
+                if (currentUser && isDocumentReady && (isSavingToCloud || (hasUnsavedChanges && online))) {
+                    sendKeepaliveCloudFlush();
+                    event.preventDefault();
+                    event.returnValue = '';
+                }
+            });
+
+            window.addEventListener('focus', () => {
+                checkCloudUpdatesOnFocus();
+            });
+
+            window.addEventListener('online', () => {
+                if (!currentUser || !isDocumentReady || hasUnresolvedConflict) return;
+                if (needsCloudReconcile) {
+                    reconcileCloudAfterOffline();
+                } else if (hasUnsavedChanges) {
+                    flushCloudSave();
+                }
+            });
+
+            window.addEventListener('offline', () => {
+                if (currentUser && isDocumentReady) {
+                    setStatus(hasUnsavedChanges ? 'Offline — saved locally, will sync when online' : 'Offline mode');
+                }
+            });
+
+            // Cross-tab local storage sync in the same browser
+            window.addEventListener('storage', (event) => {
+                if (!currentUser || !isDocumentReady || hasUnresolvedConflict) return;
+                if (event.key === getLocalMetaKey(currentUser.id) && !hasUnsavedChanges && !isSavingToCloud) {
+                    const snap = readLocalSnapshot(currentUser.id);
+                    if (snap.content !== null && snap.content !== editor.value && snap.meta && !snap.meta.dirty) {
+                        lastSyncedContent = snap.content;
+                        lastSyncedAt = snap.meta.syncedAt || lastSyncedAt;
+                        docRevision++;
+                        editor.value = snap.content;
+                        schedulePreviewRender({ immediate: false });
+                        setStatus('Synced from another tab');
+                    }
                 }
             });
 
             exportBtn.addEventListener('click', exportPreviewAsPng);
 
             document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !pdfModalBackdrop.hidden && !exportingPdf) {
+                    event.preventDefault();
+                    closePdfModal();
+                    return;
+                }
+
                 if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 's') {
                     event.preventDefault();
                     if (currentUser && !document.body.classList.contains('signed-out')) {
+                        if (hasUnsavedChanges && !hasUnresolvedConflict) {
+                            flushCloudSave();
+                        }
                         exportPreviewAsPng();
                     }
                 }
