@@ -3,55 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Text & LaTeX Editor</title>
-    <!-- Load KaTeX CSS and JS from working CDN links -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.css" integrity="sha384-3rdsX6e5mueWyoweR9NIVmtEsUkokpBT/0ALqKKIBMr9j4qhHkaIkAcGgsE6uVlp" crossorigin="anonymous">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.js" integrity="sha384-QFFtAGzvvj+bfgCGxXJlNZZR1nXEZgvG8tDLCCY1F19xl20WlfTYgguB4VcNdxYk" crossorigin="anonymous"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/contrib/auto-render.min.js" integrity="sha384-bjyGPfbij8/NDKJhSGZNP/khQVgtHUE5exjm4Ydllo42FwIgYsdLO2lXGmRBf5Mz" crossorigin="anonymous"
-    onload="renderMathInElement(document.body);"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Fonts (added): Nunito ExtraBold is the default font for the editor and other
-         fields; JetBrains Mono is one of the selectable choices in the font picker -->
+    <title>Simple Text &amp; LaTeX Editor</title>
+
+    <!-- KaTeX CSS & JS (rendering is triggered explicitly on #preview) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.css" integrity="sha384-3rdsX6e5mueWyoweR9NIVmtEsUkokpBT/0ALqKKIBMr9j4qhHkaIkAcGgsE6uVlp" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.js" integrity="sha384-QFFtAGzvvj+bfgCGxXJlNZZR1nXEZgvG8tDLCCY1F19xl20WlfTYgguB4VcNdxYk" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/contrib/auto-render.min.js" integrity="sha384-bjyGPfbij8/NDKJhSGZNP/khQVgtHUE5exjm4Ydllo42FwIgYsdLO2lXGmRBf5Mz" crossorigin="anonymous"></script>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Editor & UI Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@800&family=JetBrains+Mono&display=swap" rel="stylesheet">
 
-    <!-- Theme + font bootstrap (added): applies the saved choices before first paint
-         so the page never flashes in the wrong theme -->
+    <!-- Theme + Font Bootstrap (runs before first paint to prevent theme/font flash) -->
     <script>
         (function () {
             var FONTS = {
-                nunito:    { label: 'Nunito ExtraBold',  family: "'Nunito', Verdana, sans-serif", weight: '800' },
-                verdana:   { label: 'Verdana',           family: 'Verdana, Geneva, sans-serif', weight: '400' },
-                helvetica: { label: 'Helvetica',         family: 'Helvetica, Arial, sans-serif', weight: '400' },
-                jetbrains: { label: 'JetBrains Mono',    family: "'JetBrains Mono', Consolas, monospace", weight: '400' },
-                calibri:   { label: 'Calibri',           family: "Calibri, Carlito, 'Segoe UI', sans-serif", weight: '400' },
-                arial:     { label: 'Arial',             family: 'Arial, Helvetica, sans-serif', weight: '400' },
-                consolas:  { label: 'Consolas',          family: "Consolas, 'Liberation Mono', 'Courier New', monospace", weight: '400' }
+                nunito:    { label: 'Nunito ExtraBold', family: "'Nunito', Verdana, sans-serif", weight: '800' },
+                verdana:   { label: 'Verdana',          family: 'Verdana, Geneva, sans-serif', weight: '400' },
+                helvetica: { label: 'Helvetica',        family: 'Helvetica, Arial, sans-serif', weight: '400' },
+                jetbrains: { label: 'JetBrains Mono',   family: "'JetBrains Mono', Consolas, monospace", weight: '400' },
+                calibri:   { label: 'Calibri',          family: "Calibri, Carlito, 'Segoe UI', sans-serif", weight: '400' },
+                arial:     { label: 'Arial',            family: 'Arial, Helvetica, sans-serif', weight: '400' },
+                consolas:  { label: 'Consolas',         family: "Consolas, 'Liberation Mono', 'Courier New', monospace", weight: '400' }
             };
+
+            function safeGet(key) {
+                try {
+                    return localStorage.getItem(key);
+                } catch (e) {
+                    return null;
+                }
+            }
+
             window.LATEX_EDITOR_FONTS = FONTS;
             window.applyEditorFont = function (key) {
                 var f = FONTS[key] || FONTS.nunito;
                 document.documentElement.style.setProperty('--app-font', f.family);
                 document.documentElement.style.setProperty('--app-font-weight', f.weight);
             };
-            try {
-                var theme = localStorage.getItem('latex_editor_theme');
-                if (theme !== 'light' && theme !== 'dark') {
-                    // No saved choice yet: follow the system preference
-                    theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
-                }
-                document.documentElement.setAttribute('data-theme', theme);
-                var fontKey = localStorage.getItem('latex_editor_font');
-                window.applyEditorFont(FONTS[fontKey] ? fontKey : 'nunito');
-            } catch (e) {
-                document.documentElement.setAttribute('data-theme', 'light');
-                window.applyEditorFont('nunito');
+
+            var theme = safeGet('latex_editor_theme');
+            if (theme !== 'light' && theme !== 'dark') {
+                theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+                    ? 'dark'
+                    : 'light';
             }
+            document.documentElement.setAttribute('data-theme', theme);
+
+            var fontKey = safeGet('latex_editor_font');
+            window.applyEditorFont(FONTS[fontKey] ? fontKey : 'nunito');
         })();
     </script>
+
     <style>
-        /* ---- Theme variables (added): light palette + dark override ---- */
+        /* ---- Theme Variables ---- */
         :root {
             color-scheme: light;
             --bg: #ffffff;
@@ -69,10 +78,10 @@
             --status-text: #888888;
             --status-bg: rgba(255, 255, 255, 0.8);
             --placeholder: #aaaaaa;
-            /* Font used by the editor and other fields (NOT the render); set from JS */
             --app-font: 'Nunito', Verdana, sans-serif;
             --app-font-weight: 800;
         }
+
         :root[data-theme="dark"] {
             color-scheme: dark;
             --bg: #1e1e1e;
@@ -91,6 +100,8 @@
             --status-bg: rgba(30, 30, 30, 0.85);
             --placeholder: #6a6a6a;
         }
+
+        /* ---- Base Layout ---- */
         body {
             font-family: var(--app-font);
             font-weight: var(--app-font-weight);
@@ -103,11 +114,19 @@
             background: var(--bg);
             transition: background-color 0.25s ease, color 0.25s ease;
         }
+
+        body.signed-out > .toolbar,
+        body.signed-out > .main,
+        body.signed-out > .status {
+            display: none;
+        }
+
         .main {
             flex: 1;
             display: flex;
             min-height: 0;
         }
+
         .pane {
             flex: 1;
             height: 100%;
@@ -116,6 +135,102 @@
             flex-direction: column;
             min-width: 0;
         }
+
+        /* ---- Toolbar ---- */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            background: var(--toolbar-bg);
+            flex: none;
+            font-family: var(--app-font);
+            font-weight: var(--app-font-weight);
+            transition: background-color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .toolbar button {
+            font-family: var(--app-font);
+            font-weight: var(--app-font-weight);
+            font-size: 13px;
+            padding: 6px 14px;
+            border: 1px solid var(--btn-border);
+            border-radius: 6px;
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.25s ease;
+        }
+
+        .toolbar button:hover:not(:disabled) {
+            background: var(--btn-hover-bg);
+            border-color: var(--btn-hover-border);
+        }
+
+        .toolbar button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .kbd-hint {
+            font-size: 12px;
+            color: var(--hint-text);
+        }
+
+        .toolbar .spacer {
+            flex: 1;
+        }
+
+        .font-label {
+            font-size: 13px;
+            color: var(--hint-text);
+        }
+
+        .toolbar select {
+            font-family: var(--app-font);
+            font-weight: var(--app-font-weight);
+            font-size: 13px;
+            padding: 5px 8px;
+            border: 1px solid var(--btn-border);
+            border-radius: 6px;
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            cursor: pointer;
+            max-width: 220px;
+        }
+
+        .toolbar select:hover {
+            border-color: var(--btn-hover-border);
+        }
+
+        #themeToggle {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #themeToggle svg {
+            display: block;
+        }
+
+        #iconSun {
+            display: none;
+        }
+
+        :root[data-theme="dark"] #iconMoon {
+            display: none;
+        }
+
+        :root[data-theme="dark"] #iconSun {
+            display: block;
+        }
+
+        /* ---- Editor & Preview ---- */
         textarea {
             width: 100%;
             flex: 1;
@@ -133,15 +248,17 @@
             box-sizing: border-box;
             transition: background-color 0.25s ease, color 0.25s ease;
         }
+
         textarea::placeholder {
             color: var(--placeholder);
             opacity: 1;
         }
-        #preview {
+
+        .preview-surface {
             padding: 20px;
             overflow-y: auto;
             border-left: 1px solid var(--border);
-            white-space: pre-wrap; /* Preserves line breaks */
+            white-space: pre-wrap;
             font-size: 16px;
             line-height: 1.6;
             flex: 1;
@@ -149,84 +266,13 @@
             box-sizing: border-box;
             background: var(--preview-bg);
             color: var(--text);
-            /* The render keeps its own neutral font, independent of the editor font */
+            /* The rendered preview keeps a neutral font independent of the editor font */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             font-weight: 400;
             transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
         }
-        /* ---- Toolbar (now spans the top of the app): export, font picker, theme toggle ---- */
-        .toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
-            border-bottom: 1px solid var(--border);
-            background: var(--toolbar-bg);
-            flex: none;
-            font-family: var(--app-font);
-            font-weight: var(--app-font-weight);
-            transition: background-color 0.25s ease, border-color 0.25s ease;
-        }
-        .toolbar button {
-            font-family: var(--app-font);
-            font-weight: var(--app-font-weight);
-            font-size: 13px;
-            padding: 6px 14px;
-            border: 1px solid var(--btn-border);
-            border-radius: 6px;
-            background: var(--btn-bg);
-            color: var(--btn-text);
-            cursor: pointer;
-            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.25s ease;
-        }
-        .toolbar button:hover:not(:disabled) {
-            background: var(--btn-hover-bg);
-            border-color: var(--btn-hover-border);
-        }
-        .toolbar button:disabled {
-            opacity: 0.5;
-            cursor: default;
-        }
-        .kbd-hint {
-            font-size: 12px;
-            color: var(--hint-text);
-        }
-        .toolbar .spacer {
-            flex: 1;
-        }
-        /* ---- Font picker (added) ---- */
-        .font-label {
-            font-size: 13px;
-            color: var(--hint-text);
-        }
-        select {
-            font-family: var(--app-font);
-            font-weight: var(--app-font-weight);
-            font-size: 13px;
-            padding: 5px 8px;
-            border: 1px solid var(--btn-border);
-            border-radius: 6px;
-            background: var(--btn-bg);
-            color: var(--btn-text);
-            cursor: pointer;
-            max-width: 220px;
-        }
-        select:hover {
-            border-color: var(--btn-hover-border);
-        }
-        /* ---- Theme toggle (added): small square icon button ---- */
-        #themeToggle {
-            width: 30px;
-            height: 30px;
-            padding: 0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        #themeToggle svg {
-            display: block;
-        }
+
+        /* ---- Status Badge ---- */
         .status {
             position: fixed;
             bottom: 10px;
@@ -240,661 +286,779 @@
             font-weight: var(--app-font-weight);
             transition: background-color 0.25s ease, color 0.25s ease;
         }
+
+        /* ---- Auth Overlay ---- */
         #authPanel {
-    position: fixed;
-    inset: 0;
-    z-index: 10000;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg);
+            color: var(--text);
+            padding: 24px;
+            box-sizing: border-box;
+        }
 
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+        #authPanel[hidden] {
+            display: none;
+        }
 
-    background: var(--bg);
-    color: var(--text);
-    padding: 24px;
-    box-sizing: border-box;
-}
+        #authPanel h2 {
+            margin: 0 0 8px;
+        }
 
-#authPanel form {
-    width: 100%;
-    max-width: 340px;
+        #authPanel > p {
+            margin: 0 0 20px;
+            color: var(--hint-text);
+        }
 
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+        #authPanel form {
+            width: 100%;
+            max-width: 340px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-#authPanel input {
-    padding: 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
+        #authPanel input {
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--editor-bg);
+            color: var(--text);
+            font: inherit;
+        }
 
-    background: var(--editor-bg);
-    color: var(--text);
-    font: inherit;
-}
+        #authPanel button {
+            padding: 11px;
+            border: 1px solid var(--btn-border);
+            border-radius: 8px;
+            background: var(--btn-bg);
+            color: var(--btn-text);
+            font: inherit;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
 
-#authPanel button {
-    padding: 11px;
-    border: 1px solid var(--btn-border);
-    border-radius: 8px;
+        #authPanel button:hover:not(:disabled) {
+            background: var(--btn-hover-bg);
+            border-color: var(--btn-hover-border);
+        }
 
-    background: var(--btn-bg);
-    color: var(--btn-text);
-    font: inherit;
-    cursor: pointer;
-}
-#authPanel[hidden] {
-    display: none;
-}
+        #authPanel button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
 
-#authMessage {
-    font-size: 13px;
-    text-align: center;
-}
-
-body.signed-out > .toolbar,
-body.signed-out > .main,
-body.signed-out > .status {
-    display: none;
+        #authMessage {
+            margin: 4px 0 0;
+            min-height: 1.2em;
+            font-size: 13px;
+            text-align: center;
         }
     </style>
 </head>
-<body>
-<div id="authPanel">
-    <h2>Welcome to LaTeX Notebook</h2>
-    <p>Sign in to access your notebook</p>
+<body class="signed-out">
+    <!-- Auth Panel -->
+    <div id="authPanel" hidden>
+        <h2>Welcome to LaTeX Notebook</h2>
+        <p>Sign in to access your notebook</p>
 
-    <form id="authForm">
-        <input
-            type="email"
-            id="authEmail"
-            placeholder="Email address"
-            required
-        >
-
-        <input
-            type="password"
-            id="authPassword"
-            placeholder="Password"
-            minlength="8"
-            required
-        >
-
-        <button type="submit">
-            Sign In
-        </button>
-
-        <button type="button" id="signUpBtn">
-            Create Account
-        </button>
-
-        <p id="authMessage" role="status"></p>
-    </form>
-</div>
-    <!-- Top toolbar (moved up so it spans the whole app): export, font picker, theme toggle -->
-    <div class="toolbar">
-        <!-- Export button: click or press Ctrl+S to save the entire preview as one PNG -->
-        <button id="exportBtn" type="button" title="Export all text and rendered equations in the right preview as one high-resolution PNG">Export preview as PNG</button>
-        <span class="kbd-hint">or press Ctrl&nbsp;+&nbsp;S</span>
-        <span class="spacer"></span>
-        <!-- Font picker (added): font for the editor and other fields, not the rendered preview -->
-        <label class="font-label" for="fontSelect">Font</label>
-        <select id="fontSelect" title="Font for the editor and other fields (the rendered preview is not affected)"></select>
-        <!-- Theme toggle (added): small button that switches light/dark mode, choice is remembered -->
-        <button id="themeToggle" type="button" title="Switch to dark mode" aria-label="Switch to dark mode">
-            <svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            <svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display: none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        </button>
-        <button id="signOutBtn" type="button">
-    Sign Out
-        </button>
+        <form id="authForm">
+            <input
+                type="email"
+                id="authEmail"
+                placeholder="Email address"
+                autocomplete="email"
+                required
+            >
+            <input
+                type="password"
+                id="authPassword"
+                placeholder="Password"
+                minlength="8"
+                autocomplete="current-password"
+                required
+            >
+            <button type="submit" id="signInBtn">Sign In</button>
+            <button type="button" id="signUpBtn">Create Account</button>
+            <p id="authMessage" role="status"></p>
+        </form>
     </div>
 
+    <!-- Top Toolbar -->
+    <div class="toolbar">
+        <button id="exportBtn" type="button" title="Export all text and rendered equations in the right preview as one high-resolution PNG">
+            Export preview as PNG
+        </button>
+        <span class="kbd-hint">or press Ctrl&nbsp;+&nbsp;S</span>
+        <span class="spacer"></span>
+
+        <label class="font-label" for="fontSelect">Font</label>
+        <select id="fontSelect" title="Font for the editor and other fields (the rendered preview is not affected)"></select>
+
+        <button id="themeToggle" type="button" title="Switch to dark mode" aria-label="Switch to dark mode">
+            <svg id="iconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <svg id="iconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+        </button>
+
+        <button id="signOutBtn" type="button">Sign Out</button>
+    </div>
+
+    <!-- Split Workspace -->
     <div class="main">
-        <!-- Left side: Input -->
         <div class="pane">
             <textarea id="editor" placeholder="Type plain text here. Use $...$ for inline math and $$...$$ for block math."></textarea>
         </div>
-
-        <!-- Right side: Live Preview -->
         <div class="pane">
-            <div id="preview"></div>
+            <div id="preview" class="preview-surface"></div>
         </div>
     </div>
-    <div class="status" id="status">Saved</div>
+
+    <div class="status" id="status">Signed out</div>
 
     <script>
-        const editor = document.getElementById('editor');
-        const preview = document.getElementById('preview');
-        const status = document.getElementById('status');
-        const exportBtn = document.getElementById('exportBtn');
-        let saveTimeout;
-        // Supabase configuration
-const SUPABASE_URL = 'https://ufirthrjsjkcmhlqjchl.supabase.co/';
-const SUPABASE_KEY = 'sb_publishable_muLiI9lCKY1ZyNo82GxQ7g_9cNpzfBw';
+        (() => {
+            'use strict';
 
-// Initialize Supabase
-const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
+            /* ============================================================
+               1. Configuration & Constants
+               ============================================================ */
+            const SUPABASE_URL = 'https://ufirthrjsjkcmhlqjchl.supabase.co/';
+            const SUPABASE_KEY = 'sb_publishable_muLiI9lCKY1ZyNo82GxQ7g_9cNpzfBw';
 
-// Authentication state
-let currentUser = null;
+            const SAVE_DEBOUNCE_MS = 500;
+            const EXPORT_SCALE = 3;
+            const MAX_CANVAS_DIMENSION = 30000;
+            const MAX_CANVAS_PIXELS = 90000000;
 
-let documentLoadId = 0;
+            /* ============================================================
+               2. DOM Elements
+               ============================================================ */
+            const editor = document.getElementById('editor');
+            const preview = document.getElementById('preview');
+            const status = document.getElementById('status');
+            const exportBtn = document.getElementById('exportBtn');
+            const fontSelect = document.getElementById('fontSelect');
+            const themeToggle = document.getElementById('themeToggle');
 
-// Load the signed-in user's document from Supabase
-async function loadUserDocument(user) {
-    const thisLoadId = ++documentLoadId;
+            const authPanel = document.getElementById('authPanel');
+            const authForm = document.getElementById('authForm');
+            const authEmail = document.getElementById('authEmail');
+            const authPassword = document.getElementById('authPassword');
+            const authMessage = document.getElementById('authMessage');
+            const signInBtn = document.getElementById('signInBtn');
+            const signUpBtn = document.getElementById('signUpBtn');
+            const signOutBtn = document.getElementById('signOutBtn');
 
-    clearTimeout(saveTimeout);
-    status.textContent = 'Loading cloud document...';
+            /* ============================================================
+               3. Storage Helpers
+               ============================================================ */
+            function safeStorageGet(key) {
+                try {
+                    return localStorage.getItem(key);
+                } catch (err) {
+                    console.error('Failed to read from localStorage:', err);
+                    return null;
+                }
+            }
 
-    try {
-        const { data, error } = await supabaseClient
-            .from('documents')
-            .select('content')
-            .eq('user_id', user.id)
-            .maybeSingle();
+            function safeStorageSet(key, value) {
+                try {
+                    localStorage.setItem(key, value);
+                    return true;
+                } catch (err) {
+                    console.error('Failed to write to localStorage:', err);
+                    return false;
+                }
+            }
 
-        if (error) throw error;
+            function getLocalDocumentKey(userId) {
+                return 'latex_editor_content_' + userId;
+            }
 
-        // Prevent an old account's request from replacing the new account's document
-        if (currentUser?.id !== user.id ||
-            thisLoadId !== documentLoadId) {
-            return;
-        }
+            /* ============================================================
+               4. Theme Toggle & Font Picker
+               ============================================================ */
+            function initFontPicker() {
+                const fonts = window.LATEX_EDITOR_FONTS;
+                Object.keys(fonts).forEach((key) => {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.textContent = fonts[key].label;
+                    opt.style.fontFamily = fonts[key].family;
+                    opt.style.fontWeight = fonts[key].weight;
+                    fontSelect.appendChild(opt);
+                });
 
-        let content;
-        let migrated = false;
+                const savedFont = safeStorageGet('latex_editor_font');
+                fontSelect.value = fonts[savedFont] ? savedFont : 'nunito';
+                window.applyEditorFont(fontSelect.value);
 
-        if (data) {
-            // Cloud document already exists, use it
-            content = data.content ?? '';
-        } else {
-            // No cloud document yet, recover the existing browser copy
-            const localKey = 'latex_editor_content_' + user.id;
-            content = localStorage.getItem(localKey) || '';
+                fontSelect.addEventListener('change', () => {
+                    window.applyEditorFont(fontSelect.value);
+                    safeStorageSet('latex_editor_font', fontSelect.value);
+                });
+            }
 
-            // Migrate existing content into Supabase
-            if (content.length > 0) {
-                const { error: migrationError } = await supabaseClient
+            function currentTheme() {
+                return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            }
+
+            function updateThemeButton() {
+                const isDark = currentTheme() === 'dark';
+                const label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+                themeToggle.title = label;
+                themeToggle.setAttribute('aria-label', label);
+                themeToggle.setAttribute('aria-pressed', String(isDark));
+            }
+
+            function initThemeToggle() {
+                themeToggle.addEventListener('click', () => {
+                    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', next);
+                    safeStorageSet('latex_editor_theme', next);
+                    updateThemeButton();
+                });
+                updateThemeButton();
+            }
+
+            /* ============================================================
+               5. Preview Rendering & Document Persistence
+               ============================================================ */
+            let currentUser = null;
+            let activeUserId = null;
+            let documentLoadId = 0;
+            let isDocumentReady = false;
+            let hasUnsavedChanges = false;
+            let saveTimeout = null;
+
+            function renderPreview() {
+                preview.textContent = editor.value;
+
+                if (typeof renderMathInElement === 'function') {
+                    try {
+                        renderMathInElement(preview, {
+                            delimiters: [
+                                { left: '$$', right: '$$', display: true },
+                                { left: '$', right: '$', display: false }
+                            ],
+                            throwOnError: false
+                        });
+                    } catch (mathError) {
+                        console.error('KaTeX rendering error:', mathError);
+                    }
+                }
+            }
+
+            async function persistDocument(userId, content) {
+                safeStorageSet(getLocalDocumentKey(userId), content);
+
+                const { error } = await supabaseClient
                     .from('documents')
                     .upsert({
-                        user_id: user.id,
+                        user_id: userId,
                         content: content,
                         updated_at: new Date().toISOString()
                     }, {
                         onConflict: 'user_id'
                     });
 
-                if (migrationError) throw migrationError;
-
-                migrated = true;
+                if (error) throw error;
             }
-        }
 
-        if (currentUser?.id !== user.id ||
-            thisLoadId !== documentLoadId) {
-            return;
-        }
+            async function flushPendingSave() {
+                if (!currentUser || !isDocumentReady) return;
 
-        editor.value = content;
-        updatePreview(false);
+                const userId = currentUser.id;
+                const text = editor.value;
 
-        if (migrated) {
-            status.textContent = 'Local document migrated to cloud';
-        } else if (data) {
-            status.textContent = 'Loaded from cloud';
-        } else {
-            status.textContent = 'Ready to edit';
-        }
+                try {
+                    await persistDocument(userId, text);
 
-    } catch (error) {
-        // Keep the local copy available if cloud loading fails
-        if (currentUser?.id === user.id &&
-            thisLoadId === documentLoadId) {
-
-            const localKey = 'latex_editor_content_' + user.id;
-            editor.value = localStorage.getItem(localKey) || '';
-            updatePreview(false);
-
-            status.textContent =
-                'Cloud load failed, using local copy: ' + error.message;
-        }
-
-    } finally {
-        if (thisLoadId === documentLoadId) {
-            // No loading flag needed after this point
-        }
-    }
-        }
-        
-// Authentication elements
-const authPanel = document.getElementById('authPanel');
-const authForm = document.getElementById('authForm');
-const authEmail = document.getElementById('authEmail');
-const authPassword = document.getElementById('authPassword');
-const authMessage = document.getElementById('authMessage');
-const signUpBtn = document.getElementById('signUpBtn');
-        authForm.addEventListener('submit', async function (event) {
-    event.preventDefault();
-
-    authMessage.textContent = 'Signing in...';
-
-    const { error } =
-        await supabaseClient.auth.signInWithPassword({
-            email: authEmail.value,
-            password: authPassword.value
-        });
-
-    if (error) {
-        authMessage.textContent = error.message;
-    }
-});
-        signUpBtn.addEventListener('click', async function () {
-    authMessage.textContent = 'Creating account...';
-
-    const { data, error } =
-    await supabaseClient.auth.signUp({
-        email: authEmail.value,
-        password: authPassword.value,
-        options: {
-            emailRedirectTo: window.location.origin + window.location.pathname
-        }
-    });
-
-    if (error) {
-        authMessage.textContent = error.message;
-        return;
-    }
-
-    if (!data.session) {
-        authMessage.textContent =
-            'Account created! Please check your email to confirm your account.';
-    }
-});
-        // Listen for authentication changes
-supabaseClient.auth.onAuthStateChange(
-    (event, session) => {
-
-        clearTimeout(saveTimeout);
-
-        currentUser = session?.user ?? null;
-
-        if (currentUser) {
-
-            // User is authenticated
-            document.body.classList.remove('signed-out');
-            authPanel.hidden = true;
-
-            // Load the user's cloud document outside the auth callback
-            const userToLoad = currentUser;
-
-            setTimeout(() => {
-                if (currentUser?.id === userToLoad.id) {
-                    loadUserDocument(userToLoad);
+                    if (currentUser?.id === userId && editor.value === text) {
+                        hasUnsavedChanges = false;
+                        status.textContent = 'Saved to cloud';
+                    }
+                } catch (error) {
+                    if (currentUser?.id === userId) {
+                        status.textContent = 'Cloud save failed, local copy saved: ' + error.message;
+                    }
+                    console.error('Cloud save failed:', error);
                 }
-            }, 0);
-
-        } else {
-
-            // User is not authenticated
-            documentLoadId++;
-
-            document.body.classList.add('signed-out');
-            authPanel.hidden = false;
-
-            editor.value = '';
-            preview.replaceChildren();
-
-            authMessage.textContent = '';
-            status.textContent = 'Signed out';
-        }
-    }
-);
-
-        const signOutBtn = document.getElementById('signOutBtn');
-
-signOutBtn.addEventListener('click', async function () {
-
-    const { error } = await supabaseClient.auth.signOut({
-        scope: 'local'
-    });
-
-    if (error) {
-        status.textContent = error.message;
-    }
-});
-
-        /* ============================================================
-           Theme toggle & font picker (added)
-           ============================================================ */
-        const fontSelect = document.getElementById('fontSelect');
-        const themeToggle = document.getElementById('themeToggle');
-        const iconMoon = document.getElementById('iconMoon');
-        const iconSun = document.getElementById('iconSun');
-
-        // ---- Font picker: changes the font of the editor and the other fields.
-        //      The rendered preview is deliberately left untouched. ----
-        const FONTS = window.LATEX_EDITOR_FONTS;
-        Object.keys(FONTS).forEach(function (key) {
-            const opt = document.createElement('option');
-            opt.value = key;
-            opt.textContent = FONTS[key].label;
-            // Show every choice in its own font inside the dropdown
-            opt.style.fontFamily = FONTS[key].family;
-            opt.style.fontWeight = FONTS[key].weight;
-            fontSelect.appendChild(opt);
-        });
-        let savedFont = null;
-        try { savedFont = localStorage.getItem('latex_editor_font'); } catch (e) {}
-        fontSelect.value = FONTS[savedFont] ? savedFont : 'nunito';
-        window.applyEditorFont(fontSelect.value); // keep in sync with the head bootstrap
-        fontSelect.addEventListener('change', function () {
-            window.applyEditorFont(fontSelect.value);
-            try { localStorage.setItem('latex_editor_font', fontSelect.value); } catch (e) {}
-        });
-
-        // ---- Theme toggle: switches light/dark mode, choice is remembered ----
-        function currentTheme() {
-            return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-        }
-        function updateThemeButton() {
-            const dark = currentTheme() === 'dark';
-            iconMoon.style.display = dark ? 'none' : 'block';
-            iconSun.style.display = dark ? 'block' : 'none';
-            const label = dark ? 'Switch to light mode' : 'Switch to dark mode';
-            themeToggle.title = label;
-            themeToggle.setAttribute('aria-label', label);
-            themeToggle.setAttribute('aria-pressed', String(dark));
-        }
-        themeToggle.addEventListener('click', function () {
-            const next = currentTheme() === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            try { localStorage.setItem('latex_editor_theme', next); } catch (e) {}
-            updateThemeButton();
-        });
-        updateThemeButton();
-
-        // Load saved content on startup (or leave blank if none)
-        editor.value = "";
-
-        // Render function
-        
-function updatePreview(shouldSave = true) {
-    const text = editor.value;
-
-    // Render the editor content
-    preview.textContent = text;
-
-    if (typeof renderMathInElement === 'function') {
-        renderMathInElement(preview, {
-            delimiters: [
-                {left: '$$', right: '$$', display: true},
-                {left: '$', right: '$', display: false}
-            ],
-            throwOnError: false
-        });
-    }
-
-    // Loading a document should not trigger another save
-    if (!shouldSave) return;
-
-    status.textContent = 'Typing...';
-    clearTimeout(saveTimeout);
-
-    saveTimeout = setTimeout(async () => {
-        const userId = currentUser?.id;
-
-        if (!userId) return;
-
-        const localKey = 'latex_editor_content_' + userId;
-
-        // Save a local backup first
-        try {
-            localStorage.setItem(localKey, text);
-        } catch (storageError) {
-            console.error('Local backup failed:', storageError);
-        }
-
-        // Save the document to Supabase
-        try {
-            const { error } = await supabaseClient
-                .from('documents')
-                .upsert({
-                    user_id: userId,
-                    content: text,
-                    updated_at: new Date().toISOString()
-                }, {
-                    onConflict: 'user_id'
-                });
-
-            if (error) throw error;
-
-            if (currentUser?.id === userId) {
-                status.textContent = 'Saved to cloud';
             }
 
-        } catch (error) {
-            if (currentUser?.id === userId) {
-                status.textContent =
-                    'Cloud save failed, local copy saved: ' + error.message;
+            function scheduleSave() {
+                if (!currentUser || !isDocumentReady) return;
+
+                hasUnsavedChanges = true;
+                status.textContent = 'Typing...';
+                clearTimeout(saveTimeout);
+
+                saveTimeout = setTimeout(() => {
+                    saveTimeout = null;
+                    flushPendingSave();
+                }, SAVE_DEBOUNCE_MS);
             }
 
-            console.error('Cloud save failed:', error);
-        }
+            async function loadUserDocument(user) {
+                const thisLoadId = ++documentLoadId;
 
-    }, 500);
-}
+                clearTimeout(saveTimeout);
+                saveTimeout = null;
+                isDocumentReady = false;
+                hasUnsavedChanges = false;
+                editor.readOnly = true;
+                status.textContent = 'Loading cloud document...';
 
-}
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('documents')
+                        .select('content')
+                        .eq('user_id', user.id)
+                        .maybeSingle();
 
-status.textContent = "Saved";
-            }, 300);
-        }
+                    if (error) throw error;
+                    if (currentUser?.id !== user.id || thisLoadId !== documentLoadId) return;
 
-        // Listen for typing events
-        editor.addEventListener('input', updatePreview);
+                    let content;
+                    let migrated = false;
 
-        // Initial render
-        updatePreview();
-
-        // Once KaTeX finishes loading, re-render so inline $...$ math from a saved
-        // draft is rendered too (the auto-render onload pass only handles $$..$$,
-        // which would otherwise leave inline math unrendered until the next keystroke)
-        window.addEventListener('load', updatePreview);
-
-        /* ============================================================
-           Full-preview PNG export
-           - Exports normal text and rendered equations together.
-           - Captures all preview content, including content below the
-             visible scroll area.
-           - Adjusts resolution to fit conservative browser canvas limits.
-           ============================================================ */
-
-        const EXPORT_SCALE = 3;
-        const MAX_CANVAS_DIMENSION = 30000;
-        const MAX_CANVAS_PIXELS = 90000000;
-
-        let exporting = false;
-        let html2canvasPromise = null;
-
-        function loadHtml2Canvas() {
-            if (typeof window.html2canvas === 'function') {
-                return Promise.resolve(window.html2canvas);
-            }
-
-            if (!html2canvasPromise) {
-                html2canvasPromise = new Promise((resolve, reject) => {
-                    const script = document.createElement('script');
-                    script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-                    script.onload = () => {
-                        if (typeof window.html2canvas === 'function') {
-                            resolve(window.html2canvas);
-                        } else {
-                            reject(new Error('The PNG renderer loaded but was not available.'));
-                        }
-                    };
-                    script.onerror = () => reject(new Error('Could not load the PNG renderer. Check your internet connection and try again.'));
-                    document.head.appendChild(script);
-                }).catch(error => {
-                    html2canvasPromise = null;
-                    throw error;
-                });
-            }
-
-            return html2canvasPromise;
-        }
-
-        function chooseExportScale(width, height) {
-            const scaleForWidth = MAX_CANVAS_DIMENSION / width;
-            const scaleForHeight = MAX_CANVAS_DIMENSION / height;
-            const scaleForPixelCount = Math.sqrt(MAX_CANVAS_PIXELS / (width * height));
-            return Math.min(EXPORT_SCALE, scaleForWidth, scaleForHeight, scaleForPixelCount);
-        }
-
-        function createExportClone() {
-            const previewBounds = preview.getBoundingClientRect();
-            const previewStyles = getComputedStyle(preview);
-            const clone = preview.cloneNode(true);
-            clone.dataset.previewExportClone = 'true';
-
-            // Match the live preview's width, typography, and current theme,
-            // but let the clone expand to the full height of its content.
-            const overrides = {
-                position: 'fixed',
-                left: '0px',
-                top: '0px',
-                width: Math.ceil(previewBounds.width) + 'px',
-                height: 'auto',
-                'max-height': 'none',
-                overflow: 'visible',
-                'overflow-y': 'visible',
-                flex: 'none',
-                'min-height': '0',
-                margin: '0',
-                opacity: '0',
-                'z-index': '-2147483648',
-                'pointer-events': 'none',
-                background: previewStyles.backgroundColor,
-                color: previewStyles.color,
-                transition: 'none',
-                'box-sizing': 'border-box'
-            };
-
-            for (const [property, value] of Object.entries(overrides)) {
-                clone.style.setProperty(property, value, 'important');
-            }
-
-            document.body.appendChild(clone);
-            return clone;
-        }
-
-        function canvasToBlob(canvas) {
-            return new Promise((resolve, reject) => {
-                canvas.toBlob(blob => {
-                    if (blob) {
-                        resolve(blob);
+                    if (data) {
+                        content = data.content ?? '';
                     } else {
-                        reject(new Error('The browser could not create the PNG file. Try exporting less content at once.'));
-                    }
-                }, 'image/png');
-            });
-        }
+                        content = safeStorageGet(getLocalDocumentKey(user.id)) || '';
 
-        async function exportPreviewAsPng() {
-            if (exporting) return;
-            exporting = true;
-            exportBtn.disabled = true;
+                        if (content.length > 0) {
+                            const { error: migrationError } = await supabaseClient
+                                .from('documents')
+                                .upsert({
+                                    user_id: user.id,
+                                    content: content,
+                                    updated_at: new Date().toISOString()
+                                }, {
+                                    onConflict: 'user_id'
+                                });
 
-            let clone = null;
-            try {
-                status.textContent = 'Preparing preview...';
-                const html2canvas = await loadHtml2Canvas();
-
-                // Wait for KaTeX and any other web fonts to finish loading.
-                if (document.fonts && document.fonts.ready) {
-                    await document.fonts.ready;
-                }
-
-                clone = createExportClone();
-                await new Promise(resolve => requestAnimationFrame(resolve));
-
-                const bounds = clone.getBoundingClientRect();
-                const width = Math.ceil(bounds.width);
-                const height = Math.ceil(bounds.height);
-
-                if (!width || !height) {
-                    throw new Error('The preview has no exportable dimensions.');
-                }
-
-                const scale = chooseExportScale(width, height);
-                if (!Number.isFinite(scale) || scale <= 0) {
-                    throw new Error('The preview is too large for this browser to export as one image.');
-                }
-
-                status.textContent = 'Capturing full preview...';
-                const canvas = await html2canvas(clone, {
-                    backgroundColor: getComputedStyle(preview).backgroundColor,
-                    scale,
-                    width,
-                    height,
-                    x: 0,
-                    y: 0,
-                    windowWidth: Math.max(document.documentElement.clientWidth, width),
-                    windowHeight: Math.max(window.innerHeight, height),
-                    scrollX: 0,
-                    scrollY: 0,
-                    useCORS: true,
-                    allowTaint: false,
-                    logging: false,
-                    onclone: clonedDocument => {
-                        const exportClone = clonedDocument.querySelector('[data-preview-export-clone="true"]');
-                        if (exportClone) {
-                            exportClone.style.setProperty('opacity', '1', 'important');
-                            exportClone.style.setProperty('z-index', '2147483647', 'important');
+                            if (migrationError) throw migrationError;
+                            migrated = true;
                         }
+                    }
+
+                    if (currentUser?.id !== user.id || thisLoadId !== documentLoadId) return;
+
+                    editor.value = content;
+                    renderPreview();
+                    isDocumentReady = true;
+
+                    if (migrated) {
+                        status.textContent = 'Local document migrated to cloud';
+                    } else if (data) {
+                        status.textContent = 'Loaded from cloud';
+                    } else {
+                        status.textContent = 'Ready to edit';
+                    }
+                } catch (error) {
+                    if (currentUser?.id === user.id && thisLoadId === documentLoadId) {
+                        editor.value = safeStorageGet(getLocalDocumentKey(user.id)) || '';
+                        renderPreview();
+                        isDocumentReady = true;
+                        status.textContent = 'Cloud load failed, using local copy: ' + error.message;
+                    }
+                } finally {
+                    if (currentUser?.id === user.id && thisLoadId === documentLoadId) {
+                        editor.readOnly = false;
+                    }
+                }
+            }
+
+            /* ============================================================
+               6. Authentication
+               ============================================================ */
+            const supabaseClient = window.supabase
+                ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+                : null;
+
+            function setAuthButtonsDisabled(disabled) {
+                signInBtn.disabled = disabled;
+                signUpBtn.disabled = disabled;
+            }
+
+            function getEmailRedirectUrl() {
+                if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+                    return window.location.origin + window.location.pathname;
+                }
+                return undefined;
+            }
+
+            function initAuth() {
+                if (!supabaseClient) {
+                    authPanel.hidden = false;
+                    setAuthButtonsDisabled(true);
+                    authMessage.textContent = 'Authentication service failed to load. Please check your connection and reload.';
+                    return;
+                }
+
+                let initialAuthResolved = false;
+                const authRevealTimer = setTimeout(() => {
+                    if (!initialAuthResolved) {
+                        authPanel.hidden = false;
+                    }
+                }, 250);
+
+                authForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    if (!authForm.reportValidity()) return;
+
+                    setAuthButtonsDisabled(true);
+                    authMessage.textContent = 'Signing in...';
+
+                    try {
+                        const { error } = await supabaseClient.auth.signInWithPassword({
+                            email: authEmail.value.trim(),
+                            password: authPassword.value
+                        });
+
+                        if (error) {
+                            authMessage.textContent = error.message;
+                        }
+                    } catch (error) {
+                        authMessage.textContent = error.message || 'Sign in failed. Please try again.';
+                    } finally {
+                        setAuthButtonsDisabled(false);
                     }
                 });
 
-                status.textContent = 'Saving PNG...';
-                const blob = await canvasToBlob(canvas);
-                const objectUrl = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = objectUrl;
-                link.download = 'text-latex-preview.png';
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+                signUpBtn.addEventListener('click', async () => {
+                    if (!authForm.reportValidity()) return;
 
-                const dimensions = canvas.width.toLocaleString() + ' × ' + canvas.height.toLocaleString() + ' px';
-                const scaleNote = scale < 1 ? ' (scaled down to fit browser limits)' : '';
-                status.textContent = 'Exported full preview: ' + dimensions + scaleNote;
-            } catch (error) {
-                console.error('Preview PNG export failed:', error);
-                status.textContent = 'Export failed: ' + error.message;
-            } finally {
-                if (clone) clone.remove();
-                exporting = false;
-                exportBtn.disabled = false;
+                    setAuthButtonsDisabled(true);
+                    authMessage.textContent = 'Creating account...';
+
+                    try {
+                        const redirectUrl = getEmailRedirectUrl();
+                        const { data, error } = await supabaseClient.auth.signUp({
+                            email: authEmail.value.trim(),
+                            password: authPassword.value,
+                            options: redirectUrl ? { emailRedirectTo: redirectUrl } : undefined
+                        });
+
+                        if (error) {
+                            authMessage.textContent = error.message;
+                            return;
+                        }
+
+                        if (!data.session) {
+                            authMessage.textContent = 'Account created! Please check your email to confirm your account.';
+                        }
+                    } catch (error) {
+                        authMessage.textContent = error.message || 'Account creation failed. Please try again.';
+                    } finally {
+                        setAuthButtonsDisabled(false);
+                    }
+                });
+
+                signOutBtn.addEventListener('click', async () => {
+                    signOutBtn.disabled = true;
+
+                    try {
+                        if (currentUser && isDocumentReady && hasUnsavedChanges) {
+                            clearTimeout(saveTimeout);
+                            saveTimeout = null;
+                            status.textContent = 'Saving before sign out...';
+                            await persistDocument(currentUser.id, editor.value).catch((err) => {
+                                console.error('Save before sign out failed:', err);
+                            });
+                        }
+
+                        const { error } = await supabaseClient.auth.signOut({ scope: 'local' });
+                        if (error) {
+                            status.textContent = error.message;
+                        }
+                    } catch (error) {
+                        status.textContent = error.message || 'Sign out failed.';
+                    } finally {
+                        signOutBtn.disabled = false;
+                    }
+                });
+
+                supabaseClient.auth.onAuthStateChange((event, session) => {
+                    initialAuthResolved = true;
+                    clearTimeout(authRevealTimer);
+
+                    const nextUser = session?.user ?? null;
+
+                    if (nextUser) {
+                        const isSameLoadedUser = activeUserId === nextUser.id;
+                        currentUser = nextUser;
+
+                        document.body.classList.remove('signed-out');
+                        authPanel.hidden = true;
+                        authMessage.textContent = '';
+                        authPassword.value = '';
+
+                        // Only load the document on initial sign-in or account switch,
+                        // never on background events like TOKEN_REFRESHED.
+                        if (!isSameLoadedUser) {
+                            activeUserId = nextUser.id;
+                            isDocumentReady = false;
+                            hasUnsavedChanges = false;
+                            clearTimeout(saveTimeout);
+                            saveTimeout = null;
+                            editor.readOnly = true;
+
+                            setTimeout(() => {
+                                if (currentUser?.id === nextUser.id) {
+                                    loadUserDocument(nextUser);
+                                }
+                            }, 0);
+                        }
+                    } else {
+                        documentLoadId++;
+                        clearTimeout(saveTimeout);
+                        saveTimeout = null;
+
+                        currentUser = null;
+                        activeUserId = null;
+                        isDocumentReady = false;
+                        hasUnsavedChanges = false;
+
+                        document.body.classList.add('signed-out');
+                        authPanel.hidden = false;
+
+                        editor.readOnly = false;
+                        editor.value = '';
+                        preview.replaceChildren();
+
+                        authMessage.textContent = '';
+                        authPassword.value = '';
+                        status.textContent = 'Signed out';
+                    }
+                });
             }
-        }
 
-        exportBtn.addEventListener('click', exportPreviewAsPng);
+            /* ============================================================
+               7. Full-Preview PNG Export
+               ============================================================ */
+            let exporting = false;
+            let html2canvasPromise = null;
 
-        // Ctrl+S (Windows/Linux) or Cmd+S (Mac) export the full preview.
-        document.addEventListener('keydown', event => {
-            if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 's') {
-                event.preventDefault();
-                exportPreviewAsPng();
+            function loadHtml2Canvas() {
+                if (typeof window.html2canvas === 'function') {
+                    return Promise.resolve(window.html2canvas);
+                }
+
+                if (!html2canvasPromise) {
+                    html2canvasPromise = new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+                        script.onload = () => {
+                            if (typeof window.html2canvas === 'function') {
+                                resolve(window.html2canvas);
+                            } else {
+                                reject(new Error('The PNG renderer loaded but was not available.'));
+                            }
+                        };
+                        script.onerror = () => reject(
+                            new Error('Could not load the PNG renderer. Check your internet connection and try again.')
+                        );
+                        document.head.appendChild(script);
+                    }).catch((error) => {
+                        html2canvasPromise = null;
+                        throw error;
+                    });
+                }
+
+                return html2canvasPromise;
             }
-        });
 
+            function chooseExportScale(width, height) {
+                const scaleForWidth = MAX_CANVAS_DIMENSION / width;
+                const scaleForHeight = MAX_CANVAS_DIMENSION / height;
+                const scaleForPixelCount = Math.sqrt(MAX_CANVAS_PIXELS / (width * height));
+                return Math.min(EXPORT_SCALE, scaleForWidth, scaleForHeight, scaleForPixelCount);
+            }
+
+            function createExportClone() {
+                const previewBounds = preview.getBoundingClientRect();
+                const previewStyles = getComputedStyle(preview);
+                const clone = preview.cloneNode(true);
+
+                // Avoid duplicate #preview IDs while keeping .preview-surface styles
+                clone.removeAttribute('id');
+                clone.classList.add('preview-export-clone');
+                clone.dataset.previewExportClone = 'true';
+
+                const overrides = {
+                    position: 'fixed',
+                    left: '0px',
+                    top: '0px',
+                    width: Math.ceil(previewBounds.width) + 'px',
+                    height: 'auto',
+                    'max-height': 'none',
+                    overflow: 'visible',
+                    'overflow-y': 'visible',
+                    flex: 'none',
+                    'min-height': '0',
+                    margin: '0',
+                    opacity: '0',
+                    'z-index': '-2147483648',
+                    'pointer-events': 'none',
+                    background: previewStyles.backgroundColor,
+                    color: previewStyles.color,
+                    'border-left-color': 'transparent',
+                    transition: 'none',
+                    'box-sizing': 'border-box'
+                };
+
+                for (const [property, value] of Object.entries(overrides)) {
+                    clone.style.setProperty(property, value, 'important');
+                }
+
+                document.body.appendChild(clone);
+                return clone;
+            }
+
+            function canvasToBlob(canvas) {
+                return new Promise((resolve, reject) => {
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            resolve(blob);
+                        } else {
+                            reject(new Error('The browser could not create the PNG file. Try exporting less content at once.'));
+                        }
+                    }, 'image/png');
+                });
+            }
+
+            async function exportPreviewAsPng() {
+                if (exporting || !currentUser) return;
+                exporting = true;
+                exportBtn.disabled = true;
+
+                let clone = null;
+                try {
+                    status.textContent = 'Preparing preview...';
+                    const html2canvas = await loadHtml2Canvas();
+
+                    if (document.fonts && document.fonts.ready) {
+                        await document.fonts.ready;
+                    }
+
+                    clone = createExportClone();
+                    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+                    const bounds = clone.getBoundingClientRect();
+                    const width = Math.max(Math.ceil(bounds.width), clone.scrollWidth);
+                    const height = Math.max(Math.ceil(bounds.height), clone.scrollHeight);
+
+                    if (!width || !height) {
+                        throw new Error('The preview has no exportable dimensions.');
+                    }
+
+                    const scale = chooseExportScale(width, height);
+                    if (!Number.isFinite(scale) || scale <= 0) {
+                        throw new Error('The preview is too large for this browser to export as one image.');
+                    }
+
+                    status.textContent = 'Capturing full preview...';
+                    const canvas = await html2canvas(clone, {
+                        backgroundColor: getComputedStyle(preview).backgroundColor,
+                        scale,
+                        width,
+                        height,
+                        x: 0,
+                        y: 0,
+                        windowWidth: Math.max(document.documentElement.clientWidth, width),
+                        windowHeight: Math.max(window.innerHeight, height),
+                        scrollX: 0,
+                        scrollY: 0,
+                        useCORS: true,
+                        allowTaint: false,
+                        logging: false,
+                        onclone: (clonedDocument) => {
+                            const exportClone = clonedDocument.querySelector('[data-preview-export-clone="true"]');
+                            if (exportClone) {
+                                exportClone.style.setProperty('opacity', '1', 'important');
+                                exportClone.style.setProperty('z-index', '2147483647', 'important');
+                            }
+                        }
+                    });
+
+                    status.textContent = 'Saving PNG...';
+                    const blob = await canvasToBlob(canvas);
+                    const objectUrl = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = objectUrl;
+                    link.download = 'text-latex-preview.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+
+                    const dimensions = canvas.width.toLocaleString() + ' × ' + canvas.height.toLocaleString() + ' px';
+                    const scaleNote = scale < 1 ? ' (scaled down to fit browser limits)' : '';
+                    status.textContent = 'Exported full preview: ' + dimensions + scaleNote;
+                } catch (error) {
+                    console.error('Preview PNG export failed:', error);
+                    status.textContent = 'Export failed: ' + error.message;
+                } finally {
+                    if (clone) clone.remove();
+                    exporting = false;
+                    exportBtn.disabled = false;
+                }
+            }
+
+            /* ============================================================
+               8. Initialization & Event Listeners
+               ============================================================ */
+            initFontPicker();
+            initThemeToggle();
+            initAuth();
+
+            editor.addEventListener('input', () => {
+                renderPreview();
+                scheduleSave();
+            });
+
+            // Re-render once deferred KaTeX scripts finish before DOMContentLoaded
+            document.addEventListener('DOMContentLoaded', renderPreview);
+
+            // Flush unsaved edits locally & to cloud if the user hides/leaves the page
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden' && currentUser && isDocumentReady && hasUnsavedChanges) {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = null;
+                    flushPendingSave();
+                }
+            });
+
+            exportBtn.addEventListener('click', exportPreviewAsPng);
+
+            document.addEventListener('keydown', (event) => {
+                if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 's') {
+                    event.preventDefault();
+                    if (currentUser && !document.body.classList.contains('signed-out')) {
+                        exportPreviewAsPng();
+                    }
+                }
+            });
+        })();
     </script>
 </body>
 </html>
