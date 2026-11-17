@@ -384,6 +384,95 @@ const supabaseClient = window.supabase.createClient(
 // Authentication state
 let currentUser = null;
 
+let documentLoadId = 0;
+
+// Load the signed-in user's document from Supabase
+async function loadUserDocument(user) {
+    const thisLoadId = ++documentLoadId;
+
+    clearTimeout(saveTimeout);
+    status.textContent = 'Loading cloud document...';
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('documents')
+            .select('content')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        // Prevent an old account's request from replacing the new account's document
+        if (currentUser?.id !== user.id ||
+            thisLoadId !== documentLoadId) {
+            return;
+        }
+
+        let content;
+        let migrated = false;
+
+        if (data) {
+            // Cloud document already exists, use it
+            content = data.content ?? '';
+        } else {
+            // No cloud document yet, recover the existing browser copy
+            const localKey = 'latex_editor_content_' + user.id;
+            content = localStorage.getItem(localKey) || '';
+
+            // Migrate existing content into Supabase
+            if (content.length > 0) {
+                const { error: migrationError } = await supabaseClient
+                    .from('documents')
+                    .upsert({
+                        user_id: user.id,
+                        content: content,
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'user_id'
+                    });
+
+                if (migrationError) throw migrationError;
+
+                migrated = true;
+            }
+        }
+
+        if (currentUser?.id !== user.id ||
+            thisLoadId !== documentLoadId) {
+            return;
+        }
+
+        editor.value = content;
+        updatePreview(false);
+
+        if (migrated) {
+            status.textContent = 'Local document migrated to cloud';
+        } else if (data) {
+            status.textContent = 'Loaded from cloud';
+        } else {
+            status.textContent = 'Ready to edit';
+        }
+
+    } catch (error) {
+        // Keep the local copy available if cloud loading fails
+        if (currentUser?.id === user.id &&
+            thisLoadId === documentLoadId) {
+
+            const localKey = 'latex_editor_content_' + user.id;
+            editor.value = localStorage.getItem(localKey) || '';
+            updatePreview(false);
+
+            status.textContent =
+                'Cloud load failed, using local copy: ' + error.message;
+        }
+
+    } finally {
+        if (thisLoadId === documentLoadId) {
+            // No loading flag needed after this point
+        }
+    }
+        }
+        
 // Authentication elements
 const authPanel = document.getElementById('authPanel');
 const authForm = document.getElementById('authForm');
@@ -442,16 +531,20 @@ supabaseClient.auth.onAuthStateChange(
             document.body.classList.remove('signed-out');
             authPanel.hidden = true;
 
-            // Load this user's saved document
-            editor.value = localStorage.getItem(
-                'latex_editor_content_' + currentUser.id
-            ) || '';
+            // Load the user's cloud document outside the auth callback
+            const userToLoad = currentUser;
 
-            updatePreview();
+            setTimeout(() => {
+                if (currentUser?.id === userToLoad.id) {
+                    loadUserDocument(userToLoad);
+                }
+            }, 0);
 
         } else {
 
             // User is not authenticated
+            documentLoadId++;
+
             document.body.classList.add('signed-out');
             authPanel.hidden = false;
 
@@ -463,6 +556,7 @@ supabaseClient.auth.onAuthStateChange(
         }
     }
 );
+
         const signOutBtn = document.getElementById('signOutBtn');
 
 signOutBtn.addEventListener('click', async function () {
@@ -530,33 +624,73 @@ signOutBtn.addEventListener('click', async function () {
         editor.value = "";
 
         // Render function
-        function updatePreview() {
-            const text = editor.value;
+        
+function updatePreview(shouldSave = true) {
+    const text = editor.value;
 
-            // Use innerHTML instead of textContent so KaTeX can inject HTML nodes
-            preview.textContent = text;
+    // Render the editor content
+    preview.textContent = text;
 
-            // Tell KaTeX to find and render math delimiters
-            // (guarded so the very first render before KaTeX finishes loading doesn't throw)
-            if (typeof renderMathInElement === 'function') {
-                renderMathInElement(preview, {
-                    delimiters: [
-                        {left: '$$', right: '$$', display: true},
-                        {left: '$', right: '$', display: false}
-                    ],
-                    throwOnError: false
+    if (typeof renderMathInElement === 'function') {
+        renderMathInElement(preview, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false}
+            ],
+            throwOnError: false
+        });
+    }
+
+    // Loading a document should not trigger another save
+    if (!shouldSave) return;
+
+    status.textContent = 'Typing...';
+    clearTimeout(saveTimeout);
+
+    saveTimeout = setTimeout(async () => {
+        const userId = currentUser?.id;
+
+        if (!userId) return;
+
+        const localKey = 'latex_editor_content_' + userId;
+
+        // Save a local backup first
+        try {
+            localStorage.setItem(localKey, text);
+        } catch (storageError) {
+            console.error('Local backup failed:', storageError);
+        }
+
+        // Save the document to Supabase
+        try {
+            const { error } = await supabaseClient
+                .from('documents')
+                .upsert({
+                    user_id: userId,
+                    content: text,
+                    updated_at: new Date().toISOString()
+                }, {
+                    onConflict: 'user_id'
                 });
+
+            if (error) throw error;
+
+            if (currentUser?.id === userId) {
+                status.textContent = 'Saved to cloud';
             }
 
-            // Handle auto-save with a tiny debounce so it doesn't lag while typing
-            status.textContent = "Typing...";
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                if (currentUser) {
-    localStorage.setItem(
-        'latex_editor_content_' + currentUser.id,
-        text
-    );
+        } catch (error) {
+            if (currentUser?.id === userId) {
+                status.textContent =
+                    'Cloud save failed, local copy saved: ' + error.message;
+            }
+
+            console.error('Cloud save failed:', error);
+        }
+
+    }, 500);
+}
+
 }
 
 status.textContent = "Saved";
