@@ -4802,7 +4802,6 @@
                     const dims = await ensureTopPaddingForOverflow(clone);
                     const totalWidth = Math.max(cssWidth, dims.width);
                     const totalHeight = Math.max(1, dims.height);
-                    const totalHeight = Math.max(1, Math.ceil(Math.max(bounds.height, clone.scrollHeight)));
                     const lineBoxes = collectIndivisibleLineBoxes(clone);
                     const slices = computeSmartPageSlices(totalHeight, pageContentHeightPx, lineBoxes);
 
