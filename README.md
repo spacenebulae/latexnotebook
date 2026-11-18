@@ -25,8 +25,7 @@
 - [feature tour](#-feature-tour)
 - [math syntax cheat sheet](#-math-syntax-cheat-sheet)
 - [keyboard & mouse map](#-keyboard--mouse-map)
-- [how it thinks (architecture)]
-(#-how-it-thinks)
+- [how it thinks (architecture)](#-how-it-thinks)
 - [function reference](#-function-reference-the-big-part)
   - [1 · configuration & constants](#1--configuration--constants)
   - [2 · DOM elements](#2--dom-elements)
