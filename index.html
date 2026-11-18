@@ -269,6 +269,167 @@
             display: block;
         }
 
+        /* ---- Notebooks Hamburger Menu ---- */
+        .notebooks-menu-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        #notebooksMenuBtn {
+            max-width: 190px;
+        }
+
+        .active-notebook-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 125px;
+        }
+
+        .notebooks-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            z-index: 6000;
+            width: 245px;
+            background: var(--toolbar-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            box-shadow: var(--shadow);
+            padding: 6px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-weight: 400;
+        }
+
+        .notebooks-dropdown[hidden] {
+            display: none;
+        }
+
+        .notebooks-dropdown-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 6px 6px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--hint-text);
+        }
+
+        #newNotebookBtn {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 8px;
+        }
+
+        .notebook-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .notebook-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: text; /* Forces "I" I-beam cursor while hovering on a notebook */
+            user-select: none;
+        }
+
+        .notebook-item:hover {
+            background: var(--btn-hover-bg);
+        }
+
+        .notebook-item.is-active {
+            background: var(--active-pill-bg);
+            color: var(--active-pill-text);
+            font-weight: 600;
+        }
+
+        .notebook-item-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex: none;
+            background: transparent;
+        }
+
+        .notebook-item.is-active .notebook-item-dot {
+            background: currentColor;
+        }
+
+        .notebook-item-name {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: text;
+        }
+
+        .notebook-rename-input {
+            flex: 1;
+            min-width: 0;
+            font: inherit;
+            font-size: 13px;
+            padding: 2px 5px;
+            border: 1px solid var(--accent-bg);
+            border-radius: 4px;
+            background: var(--bg);
+            color: var(--text);
+            outline: none;
+            cursor: text;
+        }
+
+        .notebook-item-delete {
+            flex: none;
+            width: 20px;
+            height: 20px;
+            padding: 0 !important;
+            border: none !important;
+            border-radius: 4px;
+            background: transparent !important;
+            color: var(--hint-text) !important;
+            font-size: 14px !important;
+            line-height: 1;
+            justify-content: center;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .notebook-item:hover .notebook-item-delete,
+        .notebook-item.is-active .notebook-item-delete {
+            opacity: 0.8;
+        }
+
+        .notebook-item-delete:hover:not(:disabled) {
+            opacity: 1 !important;
+            background: var(--btn-bg) !important;
+            color: var(--text) !important;
+        }
+
+        .notebook-item-delete:disabled {
+            display: none;
+        }
+
+        .notebooks-dropdown-hint {
+            margin-top: 5px;
+            padding: 5px 6px 2px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--hint-text);
+        }
+
         /* ---- Pane Banners (Conflict / Offline / Render Paused) ---- */
         .pane-banner {
             display: flex;
@@ -510,6 +671,7 @@
             display: none;
         }
 
+        /* ---- Preview Zoom & Pan Viewport ---- */
         .preview-viewport {
             position: relative;
             flex: 1;
@@ -519,17 +681,17 @@
             background: var(--preview-bg);
             transition: background-color 0.25s ease, border-color 0.25s ease;
         }
-        
+
         .preview-viewport.is-pan-ready {
             cursor: grab;
         }
-        
+
         .preview-viewport.is-panning,
         .preview-viewport.is-panning * {
             cursor: grabbing !important;
             user-select: none !important;
         }
-        
+
         .preview-surface {
             position: absolute;
             top: 0;
@@ -544,27 +706,31 @@
             box-sizing: border-box;
             background: var(--preview-bg);
             color: var(--text);
+            /* Rendered preview keeps a neutral font independent of editor font */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             font-weight: 400;
             transition: background-color 0.25s ease, color 0.25s ease;
         }
+
         .preview-surface .katex-display {
             white-space: normal;
             line-height: 1.2;
             overflow: visible;
         }
-        
+
         .preview-surface .katex {
             white-space: nowrap;
             line-height: 1.2;
         }
-        
+
         .preview-export-clone .katex-display {
             overflow: visible !important;
         }
-                .preview-block {
-                    display: inline;
-                }
+
+        .preview-block {
+            display: inline;
+        }
+
         .preview-zoom-hud {
             position: absolute;
             bottom: 12px;
@@ -580,7 +746,7 @@
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-        
+
         .preview-zoom-hud button {
             height: 24px;
             min-width: 24px;
@@ -597,62 +763,63 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .preview-zoom-hud button:hover {
             background: var(--btn-hover-bg);
         }
-        
+
         .preview-zoom-hud button.is-active {
             background: var(--active-pill-bg);
             color: var(--active-pill-text);
         }
-        
+
         #zoomResetBtn {
             min-width: 46px;
             font-variant-numeric: tabular-nums;
         }
-        
+
         .preview-scrollbar {
             position: absolute;
             z-index: 25;
             opacity: 0.55;
             transition: opacity 0.15s ease;
         }
-        
+
         .preview-scrollbar:hover {
             opacity: 1;
         }
-        
+
         .preview-scrollbar.is-vertical {
             top: 4px;
             right: 3px;
             bottom: 12px;
             width: 8px;
         }
-        
+
         .preview-scrollbar.is-horizontal {
             left: 4px;
             right: 12px;
             bottom: 3px;
             height: 8px;
         }
-        
+
         .preview-scrollbar-thumb {
             position: absolute;
             border-radius: 999px;
             background: var(--hint-text);
             cursor: pointer;
         }
-        
+
         .preview-scrollbar.is-vertical .preview-scrollbar-thumb {
             width: 100%;
             left: 0;
         }
-        
+
         .preview-scrollbar.is-horizontal .preview-scrollbar-thumb {
             height: 100%;
             top: 0;
         }
+
         /* ---- Status Badge ---- */
         .status {
             position: fixed;
@@ -903,166 +1070,6 @@
             font-size: 13px;
             text-align: center;
         }
-                /* ---- Notebooks Hamburger Menu ---- */
-        .notebooks-menu-wrap {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-        }
-        
-        #notebooksMenuBtn {
-            max-width: 190px;
-        }
-        
-        .active-notebook-label {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            max-width: 125px;
-        }
-        
-        .notebooks-dropdown {
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 0;
-            z-index: 6000;
-            width: 245px;
-            background: var(--toolbar-bg);
-            color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            box-shadow: var(--shadow);
-            padding: 6px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-weight: 400;
-        }
-        
-        .notebooks-dropdown[hidden] {
-            display: none;
-        }
-        
-        .notebooks-dropdown-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 4px 6px 6px;
-            margin-bottom: 4px;
-            border-bottom: 1px solid var(--border);
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: var(--hint-text);
-        }
-        
-        #newNotebookBtn {
-            font-size: 12px;
-            font-weight: 600;
-            padding: 3px 8px;
-        }
-        
-        .notebook-list {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            max-height: 250px;
-            overflow-y: auto;
-        }
-        
-        .notebook-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 8px;
-            border-radius: 6px;
-            font-size: 13px;
-            cursor: text; /* Forces "I" I-beam cursor while hovering on a notebook */
-            user-select: none;
-        }
-        
-        .notebook-item:hover {
-            background: var(--btn-hover-bg);
-        }
-        
-        .notebook-item.is-active {
-            background: var(--active-pill-bg);
-            color: var(--active-pill-text);
-            font-weight: 600;
-        }
-        
-        .notebook-item-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            flex: none;
-            background: transparent;
-        }
-        
-        .notebook-item.is-active .notebook-item-dot {
-            background: currentColor;
-        }
-        
-        .notebook-item-name {
-            flex: 1;
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            cursor: text;
-        }
-        
-        .notebook-rename-input {
-            flex: 1;
-            min-width: 0;
-            font: inherit;
-            font-size: 13px;
-            padding: 2px 5px;
-            border: 1px solid var(--accent-bg);
-            border-radius: 4px;
-            background: var(--bg);
-            color: var(--text);
-            outline: none;
-            cursor: text;
-        }
-        
-        .notebook-item-delete {
-            flex: none;
-            width: 20px;
-            height: 20px;
-            padding: 0 !important;
-            border: none !important;
-            border-radius: 4px;
-            background: transparent !important;
-            color: var(--hint-text) !important;
-            font-size: 14px !important;
-            line-height: 1;
-            justify-content: center;
-            opacity: 0;
-            cursor: pointer;
-        }
-        
-        .notebook-item:hover .notebook-item-delete,
-        .notebook-item.is-active .notebook-item-delete {
-            opacity: 0.8;
-        }
-        
-        .notebook-item-delete:hover:not(:disabled) {
-            opacity: 1 !important;
-            background: var(--btn-bg) !important;
-            color: var(--text) !important;
-        }
-        
-        .notebook-item-delete:disabled {
-            display: none;
-        }
-        
-        .notebooks-dropdown-hint {
-            margin-top: 5px;
-            padding: 5px 6px 2px;
-            border-top: 1px solid var(--border);
-            font-size: 11px;
-            color: var(--hint-text);
-        }
     </style>
 </head>
 <body class="signed-out">
@@ -1110,7 +1117,7 @@
                     <line x1="3" y1="18" x2="21" y2="18"/>
                 </svg>
                 <span id="activeNotebookLabel" class="active-notebook-label">Notebook 1</span>
-             </button>
+            </button>
 
             <div id="notebooksDropdown" class="notebooks-dropdown" hidden role="menu" aria-label="Notebooks">
                 <div class="notebooks-dropdown-header">
@@ -1121,6 +1128,7 @@
                 <div class="notebooks-dropdown-hint">Click to switch &middot; Right-click name to rename</div>
             </div>
         </div>
+
         <button id="exportBtn" type="button" title="Export all text and rendered equations in the right preview as one high-resolution PNG">
             Export preview as PNG
         </button>
@@ -1179,29 +1187,29 @@
                 <button type="button" id="renderOnceBtn">Render once</button>
             </div>
             <div id="previewViewport" class="preview-viewport">
-            <div id="preview" class="preview-surface"></div>
-        
-            <div id="previewScrollbarY" class="preview-scrollbar is-vertical" hidden>
-                <div id="previewScrollbarThumbY" class="preview-scrollbar-thumb"></div>
+                <div id="preview" class="preview-surface"></div>
+
+                <div id="previewScrollbarY" class="preview-scrollbar is-vertical" hidden>
+                    <div id="previewScrollbarThumbY" class="preview-scrollbar-thumb"></div>
+                </div>
+                <div id="previewScrollbarX" class="preview-scrollbar is-horizontal" hidden>
+                    <div id="previewScrollbarThumbX" class="preview-scrollbar-thumb"></div>
+                </div>
+
+                <div id="previewZoomHud" class="preview-zoom-hud" aria-label="Preview zoom controls">
+                    <button type="button" id="zoomOutBtn" title="Zoom out">&minus;</button>
+                    <button type="button" id="zoomResetBtn" title="Reset zoom and pan to 100%">100%</button>
+                    <button type="button" id="zoomInBtn" title="Zoom in">+</button>
+                    <button type="button" id="panToolBtn" title="Toggle drag-to-pan (or hold Space / Middle-click drag)" aria-pressed="false">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 11V6a2 2 0 0 0-4 0v4"/>
+                            <path d="M14 10V4a2 2 0 0 0-4 0v6"/>
+                            <path d="M10 10.5V6a2 2 0 0 0-4 0v8"/>
+                            <path d="M6 14v-1a2 2 0 0 0-4 0v3a6 6 0 0 0 6 6h4a6 6 0 0 0 6-6v-5a2 2 0 0 0-4 0"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div id="previewScrollbarX" class="preview-scrollbar is-horizontal" hidden>
-                <div id="previewScrollbarThumbX" class="preview-scrollbar-thumb"></div>
-            </div>
-        
-            <div id="previewZoomHud" class="preview-zoom-hud" aria-label="Preview zoom controls">
-                <button type="button" id="zoomOutBtn" title="Zoom out">&minus;</button>
-                <button type="button" id="zoomResetBtn" title="Reset zoom and pan to 100%">100%</button>
-                <button type="button" id="zoomInBtn" title="Zoom in">+</button>
-                <button type="button" id="panToolBtn" title="Toggle drag-to-pan (or hold Space / Middle-click drag)" aria-pressed="false">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M18 11V6a2 2 0 0 0-4 0v4"/>
-                        <path d="M14 10V4a2 2 0 0 0-4 0v6"/>
-                        <path d="M10 10.5V6a2 2 0 0 0-4 0v8"/>
-                        <path d="M6 14v-1a2 2 0 0 0-4 0v3a6 6 0 0 0 6 6h4a6 6 0 0 0 6-6v-5a2 2 0 0 0-4 0"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
         </div>
     </div>
 
@@ -1342,6 +1350,13 @@
             const status = document.getElementById('status');
             const syncBanner = document.getElementById('syncBanner');
 
+            const notebooksMenuWrap = document.getElementById('notebooksMenuWrap');
+            const notebooksMenuBtn = document.getElementById('notebooksMenuBtn');
+            const activeNotebookLabel = document.getElementById('activeNotebookLabel');
+            const notebooksDropdown = document.getElementById('notebooksDropdown');
+            const newNotebookBtn = document.getElementById('newNotebookBtn');
+            const notebookList = document.getElementById('notebookList');
+
             const exportBtn = document.getElementById('exportBtn');
             const exportPdfBtn = document.getElementById('exportPdfBtn');
             const renderToggleBtn = document.getElementById('renderToggleBtn');
@@ -1351,6 +1366,16 @@
 
             const fontSelect = document.getElementById('fontSelect');
             const themeToggle = document.getElementById('themeToggle');
+
+            const previewViewport = document.getElementById('previewViewport');
+            const zoomOutBtn = document.getElementById('zoomOutBtn');
+            const zoomResetBtn = document.getElementById('zoomResetBtn');
+            const zoomInBtn = document.getElementById('zoomInBtn');
+            const panToolBtn = document.getElementById('panToolBtn');
+            const previewScrollbarY = document.getElementById('previewScrollbarY');
+            const previewScrollbarThumbY = document.getElementById('previewScrollbarThumbY');
+            const previewScrollbarX = document.getElementById('previewScrollbarX');
+            const previewScrollbarThumbX = document.getElementById('previewScrollbarThumbX');
 
             const mathGhost = document.getElementById('mathGhost');
             const caretMirror = document.getElementById('caretMirror');
@@ -1381,23 +1406,7 @@
             const signInBtn = document.getElementById('signInBtn');
             const signUpBtn = document.getElementById('signUpBtn');
             const signOutBtn = document.getElementById('signOutBtn');
-            
-            const notebooksMenuWrap = document.getElementById('notebooksMenuWrap');
-            const notebooksMenuBtn = document.getElementById('notebooksMenuBtn');
-            const activeNotebookLabel = document.getElementById('activeNotebookLabel');
-            const notebooksDropdown = document.getElementById('notebooksDropdown');
-            const newNotebookBtn = document.getElementById('newNotebookBtn');
-            const notebookList = document.getElementById('notebookList');
-            
-            const previewViewport = document.getElementById('previewViewport');
-            const zoomOutBtn = document.getElementById('zoomOutBtn');
-            const zoomResetBtn = document.getElementById('zoomResetBtn');
-            const zoomInBtn = document.getElementById('zoomInBtn');
-            const panToolBtn = document.getElementById('panToolBtn');
-            const previewScrollbarY = document.getElementById('previewScrollbarY');
-            const previewScrollbarThumbY = document.getElementById('previewScrollbarThumbY');
-            const previewScrollbarX = document.getElementById('previewScrollbarX');
-            const previewScrollbarThumbX = document.getElementById('previewScrollbarThumbX');
+
             /* ============================================================
                3. Storage Helpers
                ============================================================ */
@@ -1495,139 +1504,154 @@
                 });
                 updateThemeButton();
             }
+
+            /* ============================================================
+               4B. Art-Editor Style Preview Zoom & Pan
+               ============================================================ */
             const MIN_PREVIEW_ZOOM = 0.2;
             const MAX_PREVIEW_ZOOM = 8.0;
-            
+
             let previewZoom = 1;
             let previewPanX = 0;
             let previewPanY = 0;
             let isPanToolActive = false;
             let isSpacePanHeld = false;
             let panDragState = null;
-            
-            function clampPreviewPan() {
+
+            function getPreviewPanBounds() {
                 const vw = previewViewport.clientWidth || 1;
                 const vh = previewViewport.clientHeight || 1;
                 const cw = (preview.offsetWidth || vw) * previewZoom;
                 const ch = (preview.offsetHeight || vh) * previewZoom;
-            
+
                 const minKeepX = Math.min(80, cw * 0.5);
                 const minKeepY = Math.min(80, ch * 0.5);
-            
-                const minX = minKeepX - cw;
-                const maxX = vw - minKeepX;
-                const minY = minKeepY - ch;
-                const maxY = vh - minKeepY;
-            
-                previewPanX = Math.min(maxX, Math.max(minX, previewPanX));
-                previewPanY = Math.min(maxY, Math.max(minY, previewPanY));
-            
-                // When at 100% zoom and content fits within width, snap horizontal pan cleanly to 0
-                if (Math.abs(previewZoom - 1) < 0.001 && cw <= vw + 1) {
+
+                return {
+                    vw, vh, cw, ch,
+                    minX: minKeepX - cw,
+                    maxX: vw - minKeepX,
+                    minY: minKeepY - ch,
+                    maxY: vh - minKeepY
+                };
+            }
+
+            function clampPreviewPan() {
+                const b = getPreviewPanBounds();
+                previewPanX = Math.min(b.maxX, Math.max(b.minX, previewPanX));
+                previewPanY = Math.min(b.maxY, Math.max(b.minY, previewPanY));
+
+                // At 100% zoom, snap cleanly within normal scroll bounds
+                if (Math.abs(previewZoom - 1) < 0.001 && b.cw <= b.vw + 1) {
                     previewPanX = 0;
-                    if (ch <= vh + 1) {
+                    if (b.ch <= b.vh + 1) {
                         previewPanY = 0;
                     } else {
-                        previewPanY = Math.min(0, Math.max(vh - ch, previewPanY));
+                        previewPanY = Math.min(0, Math.max(b.vh - b.ch, previewPanY));
                     }
                 }
             }
-            
+
+            function getScrollbarMetricsY(b) {
+                const minScrollY = Math.min(0, b.vh - b.ch);
+                const maxScrollY = Math.max(0, previewPanY);
+                const rangeY = Math.max(1, maxScrollY - minScrollY);
+                const trackH = previewScrollbarY.clientHeight || Math.max(40, b.vh - 16);
+                const thumbH = Math.max(24, Math.min(trackH, (b.vh / Math.max(b.ch, b.vh)) * trackH));
+                return { minScrollY, maxScrollY, rangeY, trackH, thumbH };
+            }
+
+            function getScrollbarMetricsX(b) {
+                const minScrollX = Math.min(0, b.vw - b.cw);
+                const maxScrollX = Math.max(0, previewPanX);
+                const rangeX = Math.max(1, maxScrollX - minScrollX);
+                const trackW = previewScrollbarX.clientWidth || Math.max(40, b.vw - 16);
+                const thumbW = Math.max(24, Math.min(trackW, (b.vw / Math.max(b.cw, b.vw)) * trackW));
+                return { minScrollX, maxScrollX, rangeX, trackW, thumbW };
+            }
+
             function updatePreviewScrollbars() {
-                const vw = previewViewport.clientWidth || 1;
-                const vh = previewViewport.clientHeight || 1;
-                const cw = (preview.offsetWidth || vw) * previewZoom;
-                const ch = (preview.offsetHeight || vh) * previewZoom;
-            
-                const yMin = Math.min(0, vh - ch);
-                const yMax = Math.max(0, previewPanY); // allows slight overscroll if zoomed
-                const spanY = Math.max(ch, vh) + (yMax - Math.min(0, yMin));
-            
-                if (ch > vh + 2 || previewPanY < -1 || previewPanY > 1) {
-                    const trackH = previewScrollbarY.clientHeight || Math.max(40, vh - 16);
-                    const totalRangeY = Math.max(ch, vh - Math.min(0, previewPanY));
-                    const thumbH = Math.max(24, Math.min(trackH, (vh / totalRangeY) * trackH));
-                    const maxPanY = Math.max(1, ch - vh);
-                    const ratioY = Math.min(1, Math.max(0, -previewPanY / maxPanY));
+                const b = getPreviewPanBounds();
+
+                if (b.ch > b.vh + 2 || Math.abs(previewPanY) > 1) {
+                    const m = getScrollbarMetricsY(b);
+                    const ratioY = Math.min(1, Math.max(0, (m.maxScrollY - previewPanY) / m.rangeY));
                     previewScrollbarY.hidden = false;
-                    previewScrollbarThumbY.style.height = thumbH + 'px';
-                    previewScrollbarThumbY.style.top = (ratioY * (trackH - thumbH)) + 'px';
+                    previewScrollbarThumbY.style.height = m.thumbH + 'px';
+                    previewScrollbarThumbY.style.top = (ratioY * (m.trackH - m.thumbH)) + 'px';
                 } else {
                     previewScrollbarY.hidden = true;
                 }
-            
-                if (cw > vw + 2 || previewPanX < -1 || previewPanX > 1) {
-                    const trackW = previewScrollbarX.clientWidth || Math.max(40, vw - 16);
-                    const thumbW = Math.max(24, Math.min(trackW, (vw / Math.max(cw, vw)) * trackW));
-                    const maxPanX = Math.max(1, cw - vw);
-                    const ratioX = Math.min(1, Math.max(0, -previewPanX / maxPanX));
+
+                if (b.cw > b.vw + 2 || Math.abs(previewPanX) > 1) {
+                    const m = getScrollbarMetricsX(b);
+                    const ratioX = Math.min(1, Math.max(0, (m.maxScrollX - previewPanX) / m.rangeX));
                     previewScrollbarX.hidden = false;
-                    previewScrollbarThumbX.style.width = thumbW + 'px';
-                    previewScrollbarThumbX.style.left = (ratioX * (trackW - thumbW)) + 'px';
+                    previewScrollbarThumbX.style.width = m.thumbW + 'px';
+                    previewScrollbarThumbX.style.left = (ratioX * (m.trackW - m.thumbW)) + 'px';
                 } else {
                     previewScrollbarX.hidden = true;
                 }
             }
-            
+
             function applyPreviewTransform() {
                 clampPreviewPan();
                 preview.style.transform = `translate(${previewPanX}px, ${previewPanY}px) scale(${previewZoom})`;
                 zoomResetBtn.textContent = Math.round(previewZoom * 100) + '%';
                 updatePreviewScrollbars();
             }
-            
+
             function zoomPreviewAtViewportPoint(nextZoom, mx, my) {
                 const clampedZoom = Math.min(MAX_PREVIEW_ZOOM, Math.max(MIN_PREVIEW_ZOOM, nextZoom));
                 if (Math.abs(clampedZoom - previewZoom) < 1e-5) return;
-            
+
                 const worldX = (mx - previewPanX) / previewZoom;
                 const worldY = (my - previewPanY) / previewZoom;
-            
+
                 previewZoom = clampedZoom;
                 previewPanX = mx - worldX * previewZoom;
                 previewPanY = my - worldY * previewZoom;
                 applyPreviewTransform();
             }
-            
+
             function resetPreviewZoom() {
                 previewZoom = 1;
                 previewPanX = 0;
                 previewPanY = 0;
                 applyPreviewTransform();
             }
-            
+
             function syncPanCursorState() {
                 const panReady = isPanToolActive || isSpacePanHeld;
                 previewViewport.classList.toggle('is-pan-ready', panReady);
                 panToolBtn.classList.toggle('is-active', isPanToolActive);
                 panToolBtn.setAttribute('aria-pressed', String(isPanToolActive));
             }
-            
+
             function initPreviewZoomAndPan() {
                 previewViewport.addEventListener('wheel', (event) => {
-                    // Ignore wheel over the floating HUD itself unless scrolling
                     event.preventDefault();
-            
+
                     const rect = previewViewport.getBoundingClientRect();
                     const mx = event.clientX - rect.left;
                     const my = event.clientY - rect.top;
-            
+
                     let delta = event.deltaY;
                     if (event.deltaMode === 1) delta *= 16;
                     else if (event.deltaMode === 2) delta *= 400;
-            
-                    // Smooth exponential zoom anchored at (mx, my)
+
+                    // Smooth exponential zoom anchored at mouse position (mx, my)
                     const factor = Math.pow(1.0018, -delta);
                     zoomPreviewAtViewportPoint(previewZoom * factor, mx, my);
                 }, { passive: false });
-            
+
                 previewViewport.addEventListener('mousedown', (event) => {
                     if (event.target.closest('#previewZoomHud, .preview-scrollbar')) return;
-            
+
                     const isMiddle = event.button === 1;
                     const isPanLeft = event.button === 0 && (isPanToolActive || isSpacePanHeld);
                     if (!isMiddle && !isPanLeft) return;
-            
+
                     event.preventDefault();
                     panDragState = {
                         startX: event.clientX,
@@ -1637,26 +1661,21 @@
                     };
                     previewViewport.classList.add('is-panning');
                 });
-            
-                // Slim draggable scrollbars
+
                 function bindScrollbarDrag(thumb, axis) {
                     thumb.addEventListener('mousedown', (event) => {
                         event.preventDefault();
                         event.stopPropagation();
+                        const b = getPreviewPanBounds();
                         const startPos = axis === 'y' ? event.clientY : event.clientX;
                         const origPan = axis === 'y' ? previewPanY : previewPanX;
-                        const vw = previewViewport.clientWidth || 1;
-                        const vh = previewViewport.clientHeight || 1;
-                        const cw = (preview.offsetWidth || vw) * previewZoom;
-                        const ch = (preview.offsetHeight || vh) * previewZoom;
-                        const trackSize = axis === 'y'
-                            ? Math.max(1, previewScrollbarY.clientHeight - thumb.offsetHeight)
-                            : Math.max(1, previewScrollbarX.clientWidth - thumb.offsetWidth);
-                        const maxContentScroll = axis === 'y' ? Math.max(1, ch - vh) : Math.max(1, cw - vw);
-            
+                        const metrics = axis === 'y' ? getScrollbarMetricsY(b) : getScrollbarMetricsX(b);
+                        const trackMovable = Math.max(1, (axis === 'y' ? metrics.trackH - metrics.thumbH : metrics.trackW - metrics.thumbW));
+                        const panRange = axis === 'y' ? metrics.rangeY : metrics.rangeX;
+
                         const onMove = (moveEvent) => {
                             const delta = (axis === 'y' ? moveEvent.clientY : moveEvent.clientX) - startPos;
-                            const nextPan = origPan - (delta / trackSize) * maxContentScroll;
+                            const nextPan = origPan - (delta / trackMovable) * panRange;
                             if (axis === 'y') previewPanY = nextPan;
                             else previewPanX = nextPan;
                             applyPreviewTransform();
@@ -1671,21 +1690,20 @@
                 }
                 bindScrollbarDrag(previewScrollbarThumbY, 'y');
                 bindScrollbarDrag(previewScrollbarThumbX, 'x');
-            
+
                 window.addEventListener('mousemove', (event) => {
                     if (!panDragState) return;
                     previewPanX = panDragState.origPanX + (event.clientX - panDragState.startX);
                     previewPanY = panDragState.origPanY + (event.clientY - panDragState.startY);
                     applyPreviewTransform();
                 });
-            
+
                 window.addEventListener('mouseup', () => {
                     if (!panDragState) return;
                     panDragState = null;
                     previewViewport.classList.remove('is-panning');
                 });
-            
-                // Spacebar temporary hand tool (only when not typing in editor/inputs)
+
                 window.addEventListener('keydown', (event) => {
                     if (event.code !== 'Space' || event.repeat) return;
                     const activeTag = document.activeElement ? document.activeElement.tagName : '';
@@ -1696,14 +1714,14 @@
                     }
                     event.preventDefault();
                 });
-            
+
                 window.addEventListener('keyup', (event) => {
                     if (event.code === 'Space' && isSpacePanHeld) {
                         isSpacePanHeld = false;
                         syncPanCursorState();
                     }
                 });
-            
+
                 zoomInBtn.addEventListener('click', () => {
                     zoomPreviewAtViewportPoint(previewZoom * 1.25, previewViewport.clientWidth / 2, previewViewport.clientHeight / 2);
                 });
@@ -1715,15 +1733,16 @@
                     isPanToolActive = !isPanToolActive;
                     syncPanCursorState();
                 });
-            
+
                 if (typeof ResizeObserver === 'function') {
                     const ro = new ResizeObserver(() => applyPreviewTransform());
                     ro.observe(previewViewport);
                     ro.observe(preview);
                 }
-            
+
                 applyPreviewTransform();
             }
+
             /* ============================================================
                5. Optimized Incremental + Time-Sliced Preview Renderer
                ============================================================ */
@@ -1739,7 +1758,6 @@
                 const key = (displayMode ? 'D:' : 'I:') + expr;
                 if (katexCache.has(key)) {
                     const cached = katexCache.get(key);
-                    // Refresh LRU position
                     katexCache.delete(key);
                     katexCache.set(key, cached);
                     return cached;
@@ -1798,13 +1816,13 @@
                 'equation', 'equation*', 'gather', 'gather*', 'multline', 'multline*',
                 'array', 'darray', 'split', 'CD'
             ]);
-            
+
             function findTopLevelEnvEnd(text, envName, searchStart) {
                 const beginTag = '\\begin{' + envName + '}';
                 const endTag = '\\end{' + envName + '}';
                 let depth = 1;
                 let idx = searchStart;
-            
+
                 while (idx < text.length) {
                     if (text[idx] === '\\') {
                         if (text.startsWith(beginTag, idx)) {
@@ -1825,7 +1843,7 @@
                 }
                 return -1;
             }
-            
+
             function appendKatexToFragment(frag, expr, displayMode, rawFallback) {
                 try {
                     const html = getCachedKatexHtml(expr, displayMode);
@@ -1837,35 +1855,35 @@
                     frag.appendChild(document.createTextNode(rawFallback));
                 }
             }
-            
+
             function buildRenderedFragment(blockText) {
                 const frag = document.createDocumentFragment();
                 if (!blockText) return frag;
-            
+
                 if (!window.katex || typeof window.katex.renderToString !== 'function') {
                     frag.appendChild(document.createTextNode(blockText));
                     return frag;
                 }
-            
+
                 let pos = 0;
                 let textStart = 0;
-            
+
                 const flushPlain = (end) => {
                     if (end > textStart) {
                         frag.appendChild(document.createTextNode(blockText.slice(textStart, end)));
                     }
                 };
-            
+
                 while (pos < blockText.length) {
                     const ch = blockText[pos];
-            
+
                     // 1) $...$ and $$...$$
                     if (ch === '$' && !isEscapedAt(blockText, pos)) {
                         const isDisplay = blockText[pos + 1] === '$';
                         const delim = isDisplay ? '$$' : '$';
                         const contentStart = pos + delim.length;
                         const endIdx = findEndOfMath(delim, blockText, contentStart);
-            
+
                         if (endIdx !== -1) {
                             flushPlain(pos);
                             appendKatexToFragment(
@@ -1879,7 +1897,7 @@
                             continue;
                         }
                     }
-            
+
                     // 2) \[...\], \(...\), and standalone \begin{pmatrix|bmatrix|aligned|...}
                     if (ch === '\\' && !isEscapedAt(blockText, pos)) {
                         if (blockText.startsWith('\\[', pos) || blockText.startsWith('\\(', pos)) {
@@ -1887,7 +1905,7 @@
                             const endDelim = isDisplay ? '\\]' : '\\)';
                             const contentStart = pos + 2;
                             const endIdx = findEndOfMath(endDelim, blockText, contentStart);
-            
+
                             if (endIdx !== -1) {
                                 flushPlain(pos);
                                 appendKatexToFragment(
@@ -1901,7 +1919,7 @@
                                 continue;
                             }
                         }
-            
+
                         if (blockText.startsWith('\\begin{', pos)) {
                             const closeBrace = blockText.indexOf('}', pos + 7);
                             if (closeBrace !== -1) {
@@ -1909,7 +1927,7 @@
                                 if (BLOCK_MATH_ENVS.has(envName)) {
                                     const endTagIdx = findTopLevelEnvEnd(blockText, envName, closeBrace + 1);
                                     if (endTagIdx !== -1) {
-                                        const endPos = endTagIdx + 6 + envName.length; // "\end{" + envName + "}"
+                                        const endPos = endTagIdx + 6 + envName.length;
                                         const expr = blockText.slice(pos, endPos);
                                         flushPlain(pos);
                                         appendKatexToFragment(frag, expr, true, expr);
@@ -1920,29 +1938,28 @@
                                 }
                             }
                         }
-            
-                        // Skip escaped characters like \$ or \\ cleanly
+
                         pos += 2;
                         continue;
                     }
-            
+
                     pos++;
                 }
-            
+
                 flushPlain(blockText.length);
                 return frag;
             }
-            
+
             function createRenderedBlockElement(blockText) {
                 const span = document.createElement('span');
                 span.className = 'preview-block';
                 span.appendChild(buildRenderedFragment(blockText));
                 return span;
             }
-            
+
             function splitDocumentIntoBlocks(text) {
                 if (!text) return [];
-            
+
                 const lines = [];
                 let lineStart = 0;
                 for (let i = 0; i < text.length; i++) {
@@ -1954,7 +1971,7 @@
                 if (lineStart < text.length) {
                     lines.push(text.slice(lineStart));
                 }
-            
+
                 const blocks = [];
                 let currentLines = [];
                 let inDisplay = false;
@@ -1964,15 +1981,15 @@
                 let innerEnvDepth = 0;
                 const standaloneEnvStack = [];
                 let openLines = 0;
-            
+
                 for (let l = 0; l < lines.length; l++) {
                     const line = lines[l];
                     currentLines.push(line);
-            
+
                     let i = 0;
                     while (i < line.length) {
                         const ch = line.charCodeAt(i);
-            
+
                         if (ch === 92) { // '\'
                             if (line.startsWith('\\[', i) && !inDisplay && !inInline && !inParen && standaloneEnvStack.length === 0) {
                                 inBracket = true;
@@ -1994,7 +2011,7 @@
                                 i += 2;
                                 continue;
                             }
-            
+
                             if (line.startsWith('\\begin{', i)) {
                                 const closeBrace = line.indexOf('}', i + 7);
                                 if (closeBrace !== -1) {
@@ -2010,7 +2027,7 @@
                                     }
                                 }
                             }
-            
+
                             if (line.startsWith('\\end{', i)) {
                                 const closeBrace = line.indexOf('}', i + 5);
                                 if (closeBrace !== -1) {
@@ -2026,11 +2043,11 @@
                                     }
                                 }
                             }
-            
+
                             i += 2;
                             continue;
                         }
-            
+
                         if (ch === 36) { // '$'
                             if (line.charCodeAt(i + 1) === 36) {
                                 if (!inInline && !inBracket && !inParen && standaloneEnvStack.length === 0) {
@@ -2046,7 +2063,7 @@
                         }
                         i++;
                     }
-            
+
                     const isMathOpen = inDisplay || inInline || inBracket || inParen || standaloneEnvStack.length > 0;
                     if (isMathOpen) {
                         openLines++;
@@ -2065,18 +2082,18 @@
                     } else {
                         openLines = 0;
                     }
-            
+
                     if (!inDisplay && !inInline && !inBracket && !inParen && standaloneEnvStack.length === 0) {
                         blocks.push(currentLines.join(''));
                         currentLines = [];
                         openLines = 0;
                     }
                 }
-            
+
                 if (currentLines.length > 0) {
                     blocks.push(currentLines.join(''));
                 }
-            
+
                 return blocks;
             }
 
@@ -2090,16 +2107,6 @@
                     cancelAnimationFrame(renderRafId);
                     renderRafId = null;
                 }
-            }
-
-            function renderAllSynchronouslyInto(targetEl, text) {
-                const blocks = splitDocumentIntoBlocks(text);
-                const frag = document.createDocumentFragment();
-                for (let i = 0; i < blocks.length; i++) {
-                    frag.appendChild(createRenderedBlockElement(blocks[i]));
-                }
-                targetEl.replaceChildren(frag);
-                return blocks;
             }
 
             function applyIncrementalPreviewRender(text, immediate) {
@@ -2132,7 +2139,6 @@
                         return;
                     }
 
-                    // Determine anchor DOM node for the untouched suffix
                     const suffixStartIdx = oldEnd + 1;
                     const anchorNode = suffixStartIdx < renderedBlocks.length
                         ? renderedBlocks[suffixStartIdx].el
@@ -2146,10 +2152,10 @@
                     }
 
                     if (insertCount <= 0) {
+                        applyPreviewTransform();
                         return;
                     }
 
-                    // Small edits apply immediately in one fragment
                     if (immediate || insertCount <= 16) {
                         const frag = document.createDocumentFragment();
                         const newEntries = [];
@@ -2161,11 +2167,10 @@
                         }
                         preview.insertBefore(frag, anchorNode);
                         renderedBlocks.splice(prefix, 0, ...newEntries);
-                        if (typeof applyPreviewTransform === 'function') applyPreviewTransform();
+                        applyPreviewTransform();
                         return;
                     }
 
-                    // Large paste / full re-render: time-slice across animation frames
                     let cursor = prefix;
                     let spliceIdx = prefix;
 
@@ -2199,11 +2204,11 @@
                             renderRafId = requestAnimationFrame(stepSlice);
                         } else {
                             renderRafId = null;
+                            applyPreviewTransform();
                         }
                     };
 
                     renderRafId = requestAnimationFrame(stepSlice);
-                   if (typeof applyPreviewTransform === 'function') applyPreviewTransform();
                 };
 
                 if (immediate) {
@@ -2228,6 +2233,7 @@
                 cancelPendingRenderWork();
                 renderedBlocks = [];
                 preview.replaceChildren();
+                applyPreviewTransform();
             }
 
             function syncRenderToggleUI() {
@@ -2479,14 +2485,13 @@
             };
 
             function isInMathMode(text, cursorPos) {
-                let mode = 'text'; // 'text' | 'inline' | 'display' | 'paren' | 'bracket' | 'env'
+                let mode = 'text';
                 let envDepth = 0;
                 let i = 0;
 
                 while (i < cursorPos) {
                     const ch = text[i];
 
-                    // Reset unclosed single-$ on blank lines so a stray $5 doesn't lock later paragraphs
                     if (mode === 'inline' && ch === '\n' && text[i + 1] === '\n') {
                         mode = 'text';
                         i += 2;
@@ -2576,13 +2581,11 @@
             function findCommandTokenBeforeCaret(text, caretPos) {
                 const lineStart = text.lastIndexOf('\n', caretPos - 1) + 1;
                 const beforeOnLine = text.slice(lineStart, caretPos);
-                // Match \command or \begin{env prefix or \left( style
                 const match = beforeOnLine.match(/(\\(?:begin\{[a-zA-Z*]*|[a-zA-Z]*|left[\(\[\|\\]?))$/);
                 if (!match) return null;
 
                 const token = match[1];
                 const tokenStart = caretPos - token.length;
-                // Avoid triggering on escaped backslash "\\"
                 if (tokenStart > 0 && isEscapedAt(text, tokenStart)) {
                     return null;
                 }
@@ -2606,7 +2609,6 @@
                         let score = entry.rank + (commandUsageBoost.get(entry.cmd) || 0);
                         if (entry.insert.startsWith(token)) score += 60;
                         if (entry.cmd === token) score += 25;
-                        // Prefer shorter exact-intent completions on ties
                         score -= entry.insert.length * 0.25;
                         matches.push({ entry, score });
                     }
@@ -2674,7 +2676,6 @@
                 const caretPos = editor.selectionStart;
                 const coords = measureCaretCoordinates(caretPos);
 
-                // Hide if caret is scrolled out of the editor viewport
                 if (coords.y < -4 || coords.y + coords.lineHeight > editor.clientHeight + 8) {
                     mathGhost.hidden = true;
                     mathSuggest.hidden = true;
@@ -2684,7 +2685,6 @@
                 const activeEntry = acState.matches[acState.selectedIndex] || acState.matches[0];
                 const token = acState.token;
 
-                // 1. Gray Inline Ghost Text (when >=1 char typed after '\' and cursor sits before space/newline/EOF)
                 const nextChar = editor.value[caretPos];
                 const isClearAfterCursor = !nextChar || /\s/.test(nextChar);
                 let ghostSuffix = '';
@@ -2707,7 +2707,6 @@
                     mathGhost.hidden = true;
                 }
 
-                // 2. Floating Preview of Possible Commands
                 const listFrag = document.createDocumentFragment();
                 for (let i = 0; i < acState.matches.length; i++) {
                     const item = acState.matches[i];
@@ -2762,7 +2761,6 @@
                 mathSuggestList.replaceChildren(listFrag);
                 mathSuggest.hidden = false;
 
-                // Position popup cleanly inside viewport
                 const editorRect = editor.getBoundingClientRect();
                 const popupRect = mathSuggest.getBoundingClientRect();
 
@@ -2834,7 +2832,6 @@
                     return;
                 }
 
-                // Preserve highlight if user is continuing to narrow the same token
                 let nextIndex = 0;
                 if (acState.active && acState.tokenStart === found.tokenStart && acState.matches[acState.selectedIndex]) {
                     const prevCmd = acState.matches[acState.selectedIndex].cmd;
@@ -2885,7 +2882,7 @@
             }
 
             /* ============================================================
-               7. Airtight Local + Cloud Document Sync
+               7. Multi-Notebook Store + Airtight Local & Cloud Sync
                ============================================================ */
             let currentUser = null;
             let activeUserId = null;
@@ -2913,19 +2910,19 @@
             function generateNotebookId() {
                 return 'nb_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
             }
-            
+
             function getNextNotebookName() {
                 const existing = new Set((notebookStore?.notebooks || []).map((n) => n.name.toLowerCase()));
                 let num = (notebookStore?.notebooks?.length || 0) + 1;
                 while (existing.has(('notebook ' + num).toLowerCase())) num++;
                 return 'Notebook ' + num;
             }
-            
+
             function getActiveNotebook() {
                 if (!notebookStore || !notebookStore.notebooks.length) return null;
                 return notebookStore.notebooks.find((n) => n.id === notebookStore.activeId) || notebookStore.notebooks[0];
             }
-            
+
             function parseNotebookStore(rawContent) {
                 const nowIso = new Date().toISOString();
                 if (typeof rawContent === 'string' && rawContent.trim().startsWith('{')) {
@@ -2946,10 +2943,10 @@
                             };
                         }
                     } catch (e) {
-                        // Not multi-notebook JSON; migrate legacy plain-text note below
+                        // Legacy single-document string; migrated below
                     }
                 }
-            
+
                 const id = generateNotebookId();
                 return {
                     __latexNotebookFormat: 2,
@@ -2962,7 +2959,7 @@
                     }]
                 };
             }
-            
+
             function serializeNotebookStore() {
                 if (!notebookStore) return editor.value;
                 const active = getActiveNotebook();
@@ -2971,16 +2968,16 @@
                 }
                 return JSON.stringify(notebookStore);
             }
-            
+
             function mergeNotebookStores(localRaw, cloudRaw) {
                 const localStore = parseNotebookStore(localRaw);
                 const cloudStore = parseNotebookStore(cloudRaw);
                 const byId = new Map();
-            
+
                 localStore.notebooks.forEach((nb) => {
                     byId.set(nb.id, Object.assign({}, nb));
                 });
-            
+
                 cloudStore.notebooks.forEach((cloudNb) => {
                     const existing = byId.get(cloudNb.id);
                     if (!existing) {
@@ -2994,42 +2991,60 @@
                         existing.updatedAt = new Date().toISOString();
                     }
                 });
+
+                const seenNames = new Set();
+                const mergedList = Array.from(byId.values()).map((nb) => {
+                    let finalName = nb.name;
+                    if (seenNames.has(finalName.toLowerCase())) {
+                        finalName = nb.name + ' (Cloud)';
+                    }
+                    seenNames.add(finalName.toLowerCase());
+                    return Object.assign({}, nb, { name: finalName });
+                });
+
+                return {
+                    __latexNotebookFormat: 2,
+                    activeId: localStore.activeId,
+                    notebooks: mergedList
+                };
+            }
+
             function updateActiveNotebookLabel() {
                 const active = getActiveNotebook();
                 const label = active ? active.name : 'Notebook';
                 activeNotebookLabel.textContent = label;
                 notebooksMenuBtn.title = 'Notebooks: ' + label;
             }
-            
+
             function closeNotebooksMenu() {
                 if (notebooksDropdown.hidden) return;
                 notebooksDropdown.hidden = true;
                 notebooksMenuBtn.setAttribute('aria-expanded', 'false');
             }
-            
+
             function openNotebooksMenu() {
                 if (!currentUser || document.body.classList.contains('signed-out')) return;
                 renderNotebooksList();
                 notebooksDropdown.hidden = false;
                 notebooksMenuBtn.setAttribute('aria-expanded', 'true');
             }
-            
+
             function startRenamingNotebook(nbId, rowEl) {
                 const nb = notebookStore?.notebooks.find((n) => n.id === nbId);
                 if (!nb) return;
-            
+
                 const nameSpan = rowEl.querySelector('.notebook-item-name');
                 if (!nameSpan) return;
-            
+
                 const existingInput = notebookList.querySelector('.notebook-rename-input');
                 if (existingInput) existingInput.blur();
-            
+
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.className = 'notebook-rename-input';
                 input.value = nb.name;
                 input.maxLength = 80;
-            
+
                 let finished = false;
                 const finish = (commit) => {
                     if (finished) return;
@@ -3043,7 +3058,7 @@
                     }
                     renderNotebooksList();
                 };
-            
+
                 input.addEventListener('click', (e) => e.stopPropagation());
                 input.addEventListener('mousedown', (e) => e.stopPropagation());
                 input.addEventListener('contextmenu', (e) => e.stopPropagation());
@@ -3057,62 +3072,62 @@
                     }
                 });
                 input.addEventListener('blur', () => finish(true));
-            
+
                 nameSpan.replaceWith(input);
                 input.focus();
                 input.select();
             }
-            
+
             function renderNotebooksList() {
                 updateActiveNotebookLabel();
                 const frag = document.createDocumentFragment();
                 const list = notebookStore?.notebooks || [];
-            
+
                 list.forEach((nb) => {
                     const isActive = nb.id === notebookStore.activeId;
                     const row = document.createElement('div');
                     row.className = 'notebook-item' + (isActive ? ' is-active' : '');
                     row.setAttribute('role', 'menuitem');
                     row.title = 'Click to open · Right-click to rename';
-            
+
                     const dot = document.createElement('span');
                     dot.className = 'notebook-item-dot';
-            
+
                     const nameEl = document.createElement('span');
                     nameEl.className = 'notebook-item-name';
                     nameEl.textContent = nb.name;
-            
+
                     const delBtn = document.createElement('button');
                     delBtn.type = 'button';
                     delBtn.className = 'notebook-item-delete';
                     delBtn.textContent = '×';
                     delBtn.title = 'Delete notebook';
                     delBtn.disabled = list.length <= 1;
-            
+
                     row.addEventListener('click', () => {
                         if (row.querySelector('.notebook-rename-input')) return;
                         switchNotebook(nb.id);
                     });
-            
+
                     // Right mouse button (RMB) renames the notebook inline
                     row.addEventListener('contextmenu', (event) => {
                         event.preventDefault();
                         event.stopPropagation();
                         startRenamingNotebook(nb.id, row);
                     });
-            
+
                     delBtn.addEventListener('click', (event) => {
                         event.stopPropagation();
                         deleteNotebook(nb.id);
                     });
-            
+
                     row.append(dot, nameEl, delBtn);
                     frag.appendChild(row);
                 });
-            
+
                 notebookList.replaceChildren(frag);
             }
-            
+
             function switchNotebook(nbId) {
                 if (!isDocumentReady || hasUnresolvedConflict || !notebookStore) return;
                 if (nbId === notebookStore.activeId) {
@@ -3121,32 +3136,32 @@
                 }
                 const target = notebookStore.notebooks.find((n) => n.id === nbId);
                 if (!target) return;
-            
+
                 const current = getActiveNotebook();
                 if (current) current.content = editor.value;
-            
+
                 notebookStore.activeId = target.id;
                 hideAutocomplete();
                 editor.value = target.content;
                 resetPreviewZoom();
-            
+
                 if (isRenderEnabled) {
                     applyIncrementalPreviewRender(editor.value, true);
                 } else {
                     clearRenderedPreview();
                 }
-            
+
                 renderNotebooksList();
                 closeNotebooksMenu();
                 scheduleSaves();
                 editor.focus();
             }
-            
+
             function createNotebook() {
                 if (!isDocumentReady || hasUnresolvedConflict || !notebookStore) return;
                 const current = getActiveNotebook();
                 if (current) current.content = editor.value;
-            
+
                 const newNb = {
                     id: generateNotebookId(),
                     name: getNextNotebookName(),
@@ -3155,35 +3170,35 @@
                 };
                 notebookStore.notebooks.push(newNb);
                 notebookStore.activeId = newNb.id;
-            
+
                 hideAutocomplete();
                 editor.value = '';
                 resetPreviewZoom();
                 if (isRenderEnabled) applyIncrementalPreviewRender('', true);
                 else clearRenderedPreview();
-            
+
                 renderNotebooksList();
                 scheduleSaves();
-            
+
                 const rows = notebookList.querySelectorAll('.notebook-item');
                 const lastRow = rows[rows.length - 1];
                 if (lastRow) lastRow.scrollIntoView({ block: 'nearest' });
             }
-            
+
             function deleteNotebook(nbId) {
                 if (!isDocumentReady || hasUnresolvedConflict || !notebookStore) return;
                 if (notebookStore.notebooks.length <= 1) return;
-            
+
                 const idx = notebookStore.notebooks.findIndex((n) => n.id === nbId);
                 if (idx === -1) return;
                 const target = notebookStore.notebooks[idx];
                 if (target.content.trim().length > 0 && !confirm(`Delete "${target.name}"? This cannot be undone.`)) {
                     return;
                 }
-            
+
                 const wasActive = target.id === notebookStore.activeId;
                 notebookStore.notebooks.splice(idx, 1);
-            
+
                 if (wasActive) {
                     const nextNb = notebookStore.notebooks[Math.max(0, idx - 1)];
                     notebookStore.activeId = nextNb.id;
@@ -3192,28 +3207,11 @@
                     if (isRenderEnabled) applyIncrementalPreviewRender(editor.value, true);
                     else clearRenderedPreview();
                 }
-            
+
                 renderNotebooksList();
                 scheduleSaves();
             }
-                // Deduplicate identical names (e.g., if both sides were legacy single notes)
-                const seenNames = new Set();
-                const mergedList = Array.from(byId.values()).map((nb) => {
-                    let finalName = nb.name;
-                    if (seenNames.has(finalName.toLowerCase())) {
-                        finalName = nb.name + ' (Cloud)';
-                    }
-                    seenNames.add(finalName.toLowerCase());
-                    return Object.assign({}, nb, { name: finalName });
-                });
-            
-                return {
-                    __latexNotebookFormat: 2,
-                    activeId: localStore.activeId,
-                    notebooks: mergedList
-                };
-            }
-            
+
             function setStatus(text, titleText) {
                 status.textContent = text;
                 status.title = titleText || text;
@@ -3293,12 +3291,12 @@
                     lastSyncedContent = cloudContent;
                     lastSyncedAt = cloudUpdatedAt || new Date().toISOString();
                     docRevision++;
-            
+
                     notebookStore = parseNotebookStore(cloudContent);
                     editor.value = getActiveNotebook()?.content || '';
                     resetPreviewZoom();
                     renderNotebooksList();
-            
+
                     writeLocalSnapshot(currentUser.id, cloudContent, {
                         dirty: false,
                         updatedAt: lastSyncedAt,
@@ -3320,11 +3318,11 @@
                     hasUnresolvedConflict = false;
                     hasUnsavedChanges = true;
                     docRevision++;
-            
+
                     editor.value = getActiveNotebook()?.content || '';
                     resetPreviewZoom();
                     renderNotebooksList();
-            
+
                     hideSyncBanner();
                     if (isRenderEnabled) applyIncrementalPreviewRender(editor.value, true);
                     else clearRenderedPreview();
@@ -3541,7 +3539,6 @@
                     const currentLocal = serializeNotebookStore();
 
                     if (!data) {
-                        // Cloud has no row yet; upload local draft if non-empty or dirty
                         await flushCloudSave();
                         return;
                     }
@@ -3566,7 +3563,6 @@
                     const baseSynced = localSnap.meta ? localSnap.meta.syncedContent : undefined;
 
                     if (!hasUnsavedChanges && docRevision === revBefore && (!localSnap.meta || !localSnap.meta.dirty)) {
-                        // Local had no unsaved changes; accept fresher cloud version
                         lastSyncedContent = cloudContent;
                         lastSyncedAt = cloudUpdatedAt;
                         docRevision++;
@@ -3574,6 +3570,12 @@
                         editor.value = getActiveNotebook()?.content || '';
                         resetPreviewZoom();
                         renderNotebooksList();
+                        writeLocalSnapshot(userId, cloudContent, {
+                            dirty: false,
+                            updatedAt: cloudUpdatedAt,
+                            syncedContent: cloudContent,
+                            syncedAt: cloudUpdatedAt
+                        });
                         if (isRenderEnabled) applyIncrementalPreviewRender(editor.value, false);
                         else clearRenderedPreview();
                         setStatus('Synced from cloud');
@@ -3581,7 +3583,6 @@
                     }
 
                     if (baseSynced !== undefined && cloudContent === baseSynced) {
-                        // Cloud did not change while offline -> safe to push local edits
                         lastSyncedContent = baseSynced;
                         hasUnsavedChanges = true;
                         await flushCloudSave();
@@ -3607,14 +3608,12 @@
                     retryTimer = null;
                 }
 
-                // Fast debounced local backup
                 if (localSaveTimer) clearTimeout(localSaveTimer);
                 localSaveTimer = setTimeout(() => {
                     localSaveTimer = null;
                     flushLocalDraftSync();
                 }, LOCAL_SAVE_DEBOUNCE_MS);
 
-                // Debounced cloud backup
                 if (cloudSaveTimer) clearTimeout(cloudSaveTimer);
                 cloudSaveTimer = setTimeout(() => {
                     cloudSaveTimer = null;
@@ -3632,7 +3631,6 @@
                     updated_at: new Date().toISOString()
                 });
 
-                // Keepalive requests are capped around 64KB by browsers
                 if (payload.length > 60000) return;
 
                 const endpoint = SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/documents?on_conflict=user_id';
@@ -3756,14 +3754,12 @@
                         if (hasDirtyLocal) {
                             const baseSynced = localMeta.syncedContent;
                             if (baseSynced !== undefined && cloudContent === baseSynced) {
-                                // Local draft was never uploaded and cloud is unchanged
                                 finalContent = localContent;
                                 lastSyncedContent = baseSynced;
                                 lastSyncedAt = localMeta.syncedAt || cloudUpdatedAt;
                                 shouldPushDirtyLocal = true;
                                 statusText = 'Syncing unsaved local draft...';
                             } else {
-                                // Both local and cloud diverged -> let user resolve safely
                                 finalContent = localContent;
                                 lastSyncedContent = baseSynced !== undefined ? baseSynced : cloudContent;
                                 lastSyncedAt = cloudUpdatedAt;
@@ -3792,7 +3788,7 @@
                     isDocumentReady = true;
                     resetPreviewZoom();
                     renderNotebooksList();
-                    
+
                     if (isRenderEnabled) {
                         applyIncrementalPreviewRender(editor.value, false);
                     } else {
@@ -3809,7 +3805,6 @@
                     if (currentUser?.id !== user.id || thisLoadId !== documentLoadId) return;
 
                     if (localContent !== null) {
-                        // Local backup exists -> allow offline editing and mark for safe cloud reconciliation
                         notebookStore = parseNotebookStore(localContent);
                         editor.value = getActiveNotebook()?.content || '';
                         editor.readOnly = false;
@@ -3821,7 +3816,7 @@
                         lastSyncedContent = localMeta && typeof localMeta.syncedContent === 'string'
                             ? localMeta.syncedContent
                             : null;
-                        
+
                         if (isRenderEnabled) {
                             applyIncrementalPreviewRender(editor.value, false);
                         } else {
@@ -3832,7 +3827,6 @@
                         retryAttempt = 1;
                         scheduleCloudRetry();
                     } else {
-                        // Do NOT allow blank overwrite of an unseen cloud document
                         editor.value = '';
                         editor.readOnly = true;
                         isDocumentReady = false;
@@ -3855,6 +3849,7 @@
                 scheduleSaves();
                 updateAutocomplete();
             }
+
             /* ============================================================
                8. Authentication
                ============================================================ */
@@ -4036,6 +4031,7 @@
             let exportingPng = false;
             let html2canvasPromise = null;
             let jsPdfPromise = null;
+            let inlinedKatexCssPromise = null;
 
             function loadHtml2Canvas() {
                 if (typeof window.html2canvas === 'function') {
@@ -4104,8 +4100,6 @@
                 return Math.min(preferredScale, scaleForWidth, scaleForHeight, scaleForPixelCount);
             }
 
-            let inlinedKatexCssPromise = null;
-            
             function arrayBufferToBase64(buffer) {
                 const bytes = new Uint8Array(buffer);
                 let binary = '';
@@ -4115,38 +4109,36 @@
                 }
                 return btoa(binary);
             }
-            
+
             function getInlinedKatexCss() {
                 if (inlinedKatexCssPromise) return inlinedKatexCssPromise;
-            
+
                 inlinedKatexCssPromise = (async () => {
                     const katexLink = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
                         .find((el) => el.href && el.href.includes('katex'));
                     const cssUrl = katexLink
                         ? katexLink.href
                         : 'https://cdn.jsdelivr.net/npm/katex@0.19.0/dist/katex.min.css';
-            
-                    const resp = await fetch(cssUrl, { mode: 'cors' });
+
+                    const resp = await fetch(cssUrl, { mode: 'cors', cache: 'force-cache' });
                     if (!resp.ok) throw new Error('Could not fetch KaTeX CSS');
                     const rawCss = await resp.text();
-            
-                    // Find every .woff2 URL referenced in KaTeX CSS and fetch each once
+
                     const fontUrls = new Set();
                     const urlRegex = /url\((["']?)([^)"']+\.woff2)\1\)/gi;
                     let match;
                     while ((match = urlRegex.exec(rawCss)) !== null) {
                         fontUrls.add(new URL(match[2], cssUrl).href);
                     }
-            
+
                     const fontMap = new Map();
                     await Promise.all(Array.from(fontUrls).map(async (absUrl) => {
-                        const fontResp = await fetch(absUrl, { mode: 'cors' });
+                        const fontResp = await fetch(absUrl, { mode: 'cors', cache: 'force-cache' });
                         if (!fontResp.ok) return;
                         const buf = await fontResp.arrayBuffer();
                         fontMap.set(absUrl, 'data:font/woff2;base64,' + arrayBufferToBase64(buf));
                     }));
-            
-                    // Replace @font-face src lists with base64 woff2 only
+
                     return rawCss.replace(/src\s*:\s*[^;}]+/gi, (srcDecl) => {
                         const m = srcDecl.match(/url\((["']?)([^)"']+\.woff2)\1\)/i);
                         if (!m) return srcDecl;
@@ -4158,25 +4150,24 @@
                     inlinedKatexCssPromise = null;
                     throw err;
                 });
-            
+
                 return inlinedKatexCssPromise;
             }
-            
+
             function createExportSurfaceClone(options) {
                 const opts = options || {};
                 const previewStyles = getComputedStyle(preview);
-                // Use offsetWidth / clientWidth so zoom transform never inflates export width
                 const rawWidth = preview.offsetWidth || previewViewport.clientWidth || 600;
                 const widthPx = opts.widthPx || Math.max(320, Math.ceil(rawWidth));
                 const backgroundColor = opts.backgroundColor || previewStyles.backgroundColor;
                 const textColor = opts.textColor || previewStyles.color;
                 const fontSizePx = opts.fontSizePx ? opts.fontSizePx + 'px' : previewStyles.fontSize;
                 const padding = typeof opts.padding === 'string' ? opts.padding : previewStyles.padding;
-            
+
                 const clone = document.createElement('div');
                 clone.className = 'preview-surface preview-export-clone';
                 clone.dataset.previewExportClone = 'true';
-            
+
                 if (opts.docTitle) {
                     const heading = document.createElement('div');
                     heading.textContent = opts.docTitle;
@@ -4187,20 +4178,19 @@
                     heading.style.borderBottom = '1px solid ' + (opts.titleBorderColor || '#cccccc');
                     clone.appendChild(heading);
                 }
-            
-                // Append blocks directly (do NOT wrap in display: contents)
+
                 const blocks = splitDocumentIntoBlocks(editor.value);
                 const frag = document.createDocumentFragment();
                 for (let i = 0; i < blocks.length; i++) {
                     frag.appendChild(createRenderedBlockElement(blocks[i]));
                 }
                 clone.appendChild(frag);
-            
+
                 const overrides = {
                     position: 'fixed',
                     left: '0px',
                     top: '0px',
-                    display: 'flow-root', // Prevents .katex-display margins collapsing outside clone
+                    display: 'flow-root',
                     width: widthPx + 'px',
                     height: 'auto',
                     'min-height': '0',
@@ -4222,21 +4212,21 @@
                     transition: 'none',
                     'box-sizing': 'border-box'
                 };
-            
+
                 for (const [property, value] of Object.entries(overrides)) {
                     clone.style.setProperty(property, value, 'important');
                 }
-            
+
                 document.body.appendChild(clone);
                 return clone;
             }
-            
+
             function measureExportDimensions(clone) {
                 const cloneRect = clone.getBoundingClientRect();
                 let minTop = cloneRect.top;
                 let maxBottom = Math.max(cloneRect.bottom, cloneRect.top + clone.scrollHeight);
                 let maxRight = Math.max(cloneRect.right, cloneRect.left + clone.scrollWidth);
-            
+
                 const nodes = clone.querySelectorAll('.katex-display, .katex, .katex-html, .mtable, .vlist-t, svg');
                 for (let i = 0; i < nodes.length; i++) {
                     const r = nodes[i].getBoundingClientRect();
@@ -4246,7 +4236,7 @@
                         if (r.right > maxRight) maxRight = r.right;
                     }
                 }
-            
+
                 const extraTop = Math.max(0, Math.ceil(cloneRect.top - minTop));
                 return {
                     width: Math.max(Math.ceil(maxRight - cloneRect.left), clone.scrollWidth),
@@ -4254,7 +4244,7 @@
                     extraTop
                 };
             }
-            
+
             async function ensureTopPaddingForOverflow(clone) {
                 await new Promise((resolve) => requestAnimationFrame(resolve));
                 let dims = measureExportDimensions(clone);
@@ -4266,12 +4256,10 @@
                 }
                 return dims;
             }
-            
+
             function prepareCloneForHtml2Canvas(root) {
-                // 1. Remove hidden accessibility MathML (html2canvas breaks on clip-path: inset(50%))
                 root.querySelectorAll('.katex-mathml').forEach((el) => el.remove());
-            
-                // 2. Ensure thin fraction bars & matrix lines are at least 1px thick
+
                 root.querySelectorAll('.frac-line, .katex-hline, .overline-line, .underline-line').forEach((el) => {
                     const cs = getComputedStyle(el);
                     if (parseFloat(cs.borderBottomWidth) > 0 && parseFloat(cs.borderBottomWidth) < 1) {
@@ -4281,8 +4269,7 @@
                         el.style.minHeight = '1px';
                     }
                 });
-            
-                // 3. Resolve currentColor & em dimensions on KaTeX SVGs
+
                 root.querySelectorAll('.katex svg').forEach((svg) => {
                     const cs = getComputedStyle(svg);
                     const color = cs.color || '#000000';
@@ -4296,7 +4283,7 @@
                             shape.setAttribute('stroke', color);
                         }
                     });
-            
+
                     const rect = svg.getBoundingClientRect();
                     if (svg.closest('.hide-tail')) {
                         const parentRect = svg.parentElement.getBoundingClientRect();
@@ -4309,7 +4296,7 @@
                     }
                 });
             }
-            
+
             async function renderCloneViaForeignObject(clone, width, sliceHeight, fullHeight, scale, bgColor, sliceY) {
                 const katexCss = await getInlinedKatexCss();
                 const copy = clone.cloneNode(true);
@@ -4319,13 +4306,9 @@
                 copy.style.setProperty('z-index', '1', 'important');
                 copy.style.setProperty('width', width + 'px', 'important');
                 copy.style.setProperty('min-height', fullHeight + 'px', 'important');
-            
-                const wrapper = document.createElement('div');
-                wrapper.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-                wrapper.style.cssText = `margin:0;padding:0;width:${width}px;height:${fullHeight}px;background:${bgColor};overflow:visible;`;
-            
-                const styleEl = document.createElement('style');
-                styleEl.textContent = katexCss + `
+
+                const copyHtml = new XMLSerializer().serializeToString(copy);
+                const extraExportCss = `
                     * { box-sizing: border-box; }
                     .preview-surface {
                         white-space: pre-wrap;
@@ -4337,18 +4320,21 @@
                     .preview-surface .katex-display { white-space: normal; line-height: 1.2; overflow: visible !important; }
                     .preview-surface .katex { white-space: nowrap; line-height: 1.2; }
                 `;
-            
-                wrapper.appendChild(styleEl);
-                wrapper.appendChild(copy);
-            
-                const xhtml = new XMLSerializer().serializeToString(wrapper);
+                const safeCss = (katexCss + '\n' + extraExportCss).replace(/\]\]>/g, ']] >');
+                const safeBg = String(bgColor || '#ffffff').replace(/"/g, "'");
+
                 const outW = Math.max(1, Math.round(width * scale));
                 const outH = Math.max(1, Math.round(sliceHeight * scale));
                 const svgXml =
                     `<svg xmlns="http://www.w3.org/2000/svg" width="${outW}" height="${outH}" viewBox="0 ${sliceY} ${width} ${sliceHeight}">` +
-                    `<foreignObject x="0" y="0" width="${width}" height="${fullHeight}">${xhtml}</foreignObject>` +
+                    `<foreignObject x="0" y="0" width="${width}" height="${fullHeight}">` +
+                    `<div xmlns="http://www.w3.org/1999/xhtml" style="margin:0;padding:0;width:${width}px;height:${fullHeight}px;background:${safeBg};overflow:visible;">` +
+                    `<style><![CDATA[${safeCss}]]></style>` +
+                    copyHtml +
+                    `</div>` +
+                    `</foreignObject>` +
                     `</svg>`;
-            
+
                 const img = new Image();
                 const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgXml);
                 await new Promise((resolve, reject) => {
@@ -4359,7 +4345,7 @@
                 if (typeof img.decode === 'function') {
                     await img.decode().catch(() => {});
                 }
-            
+
                 const canvas = document.createElement('canvas');
                 canvas.width = outW;
                 canvas.height = outH;
@@ -4367,15 +4353,14 @@
                 ctx.fillStyle = bgColor;
                 ctx.fillRect(0, 0, outW, outH);
                 ctx.drawImage(img, 0, 0, outW, outH);
-            
-                // Throws SecurityError immediately if browser tainted the canvas
+
                 await canvasToBlob(canvas);
                 return canvas;
             }
-            
+
             async function renderCloneWithHtml2Canvas(clone, width, sliceHeight, scale, bgColor, sliceY) {
                 const html2canvas = await loadHtml2Canvas();
-            
+
                 if (sliceY === 0) {
                     return html2canvas(clone, {
                         backgroundColor: bgColor,
@@ -4401,8 +4386,7 @@
                         }
                     });
                 }
-            
-                // Sliced viewport for huge documents in fallback mode
+
                 const viewport = document.createElement('div');
                 viewport.dataset.pdfSliceViewport = 'true';
                 viewport.style.cssText = `position:fixed;left:0;top:0;width:${width}px;height:${sliceHeight}px;overflow:hidden;background:${bgColor};opacity:0;z-index:-2147483648;pointer-events:none;box-sizing:border-box;`;
@@ -4414,7 +4398,7 @@
                 copy.style.setProperty('z-index', '1', 'important');
                 viewport.appendChild(copy);
                 document.body.appendChild(viewport);
-            
+
                 try {
                     return await html2canvas(viewport, {
                         backgroundColor: bgColor,
@@ -4443,7 +4427,7 @@
                     viewport.remove();
                 }
             }
-            
+
             async function renderCloneToCanvas(clone, width, sliceHeight, fullHeight, scale, bgColor, sliceY = 0) {
                 const isSafari = /^((?!chrome|chromium|android).)*safari/i.test(navigator.userAgent);
                 if (!isSafari) {
@@ -4455,7 +4439,7 @@
                 }
                 return renderCloneWithHtml2Canvas(clone, width, sliceHeight, scale, bgColor, sliceY);
             }
-            
+
             function canvasToBlob(canvas) {
                 return new Promise((resolve, reject) => {
                     canvas.toBlob((blob) => {
@@ -4464,35 +4448,35 @@
                     }, 'image/png');
                 });
             }
-            
+
             async function exportPreviewAsPng() {
                 if (exportingPng || !currentUser) return;
                 exportingPng = true;
                 exportBtn.disabled = true;
-            
+
                 let clone = null;
                 try {
                     setStatus('Preparing PNG preview...');
                     if (document.fonts && document.fonts.ready) {
                         await document.fonts.ready;
                     }
-            
+
                     clone = createExportSurfaceClone();
                     const dims = await ensureTopPaddingForOverflow(clone);
-            
+
                     if (!dims.width || !dims.height) {
                         throw new Error('The preview has no exportable dimensions.');
                     }
-            
+
                     const scale = chooseExportScale(dims.width, dims.height, EXPORT_SCALE);
                     if (!Number.isFinite(scale) || scale <= 0) {
                         throw new Error('The preview is too large for this browser to export as one image.');
                     }
-            
+
                     setStatus('Capturing full preview...');
                     const bgColor = getComputedStyle(preview).backgroundColor;
                     const canvas = await renderCloneToCanvas(clone, dims.width, dims.height, dims.height, scale, bgColor, 0);
-            
+
                     setStatus('Saving PNG...');
                     const blob = await canvasToBlob(canvas);
                     const objectUrl = URL.createObjectURL(blob);
@@ -4504,9 +4488,10 @@
                     link.click();
                     link.remove();
                     setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
-            
+
                     const dimensions = canvas.width.toLocaleString() + ' × ' + canvas.height.toLocaleString() + ' px';
-                    setStatus('Exported full preview: ' + dimensions);
+                    const scaleNote = scale < 1 ? ' (scaled down to fit browser limits)' : '';
+                    setStatus('Exported full preview: ' + dimensions + scaleNote);
                 } catch (error) {
                     console.error('Preview PNG export failed:', error);
                     setStatus('Export failed: ' + error.message);
@@ -4599,13 +4584,7 @@
                     // Ignore malformed saved PDF preferences
                 }
             }
-            
-            const activeNb = getActiveNotebook();
-            if (activeNb && !pdfFileName.dataset.userEdited) {
-                const clean = activeNb.name.replace(/[\\/:*?"<>|]+/g, '-').trim();
-                if (clean) pdfFileName.value = clean;
-            }
-            
+
             function updatePdfSummary() {
                 const opts = getPdfOptionsFromForm();
                 const sizeLabels = { letter: 'Letter', a4: 'A4', legal: 'Legal', a5: 'A5' };
@@ -4626,14 +4605,20 @@
                 if (!currentUser || document.body.classList.contains('signed-out')) return;
                 hideAutocomplete();
                 lastFocusedBeforeModal = document.activeElement;
+
+                const activeNb = getActiveNotebook();
+                if (activeNb && !pdfFileName.dataset.userEdited) {
+                    const clean = activeNb.name.replace(/[\\/:*?"<>|]+/g, '-').trim();
+                    if (clean) pdfFileName.value = clean;
+                }
+
                 updatePdfSummary();
                 pdfModalBackdrop.hidden = false;
                 pdfFileName.focus();
                 pdfFileName.select();
 
-                // Pre-warm PDF/Canvas libraries while the user configures options
-                loadHtml2Canvas().catch(() => {});
                 loadJsPdf().catch(() => {});
+                getInlinedKatexCss().catch(() => {});
             }
 
             function closePdfModal() {
@@ -4649,17 +4634,17 @@
                 const containerRect = container.getBoundingClientRect();
                 const baseTop = containerRect.top;
                 const boxes = [];
-            
+
                 const katexNodes = container.querySelectorAll('.katex-display, .katex');
                 for (let i = 0; i < katexNodes.length; i++) {
                     const el = katexNodes[i];
                     if (el.classList.contains('katex') && el.closest('.katex-display')) continue;
-            
+
                     let minTop = Infinity;
                     let maxBottom = -Infinity;
                     const parts = el.querySelectorAll('.katex-html, .mtable, .vlist-t, svg');
                     const targets = parts.length > 0 ? [el, ...parts] : [el];
-            
+
                     for (let j = 0; j < targets.length; j++) {
                         const r = targets[j].getBoundingClientRect();
                         if (r.height > 0 && r.width > 0) {
@@ -4667,7 +4652,7 @@
                             if (r.bottom > maxBottom) maxBottom = r.bottom;
                         }
                     }
-            
+
                     if (minTop < maxBottom) {
                         boxes.push({
                             top: minTop - baseTop - 3,
@@ -4675,7 +4660,7 @@
                         });
                     }
                 }
-            
+
                 const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
                     acceptNode: (node) => {
                         if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
@@ -4683,7 +4668,7 @@
                         return NodeFilter.FILTER_ACCEPT;
                     }
                 });
-            
+
                 const range = document.createRange();
                 let currentNode;
                 while ((currentNode = walker.nextNode())) {
@@ -4699,16 +4684,16 @@
                         }
                     }
                 }
-            
+
                 boxes.sort((a, b) => a.top - b.top);
                 return boxes;
             }
-            
+
             function computeSmartPageSlices(totalHeight, pageContentHeightPx, boxes) {
                 const slices = [];
                 let currentTop = 0;
                 const minAdvance = Math.max(36, Math.floor(pageContentHeightPx * 0.2));
-            
+
                 while (currentTop < totalHeight - 2) {
                     const idealEnd = Math.min(totalHeight, currentTop + pageContentHeightPx);
                     if (idealEnd >= totalHeight - 2) {
@@ -4718,7 +4703,7 @@
                         });
                         break;
                     }
-            
+
                     let chosenEnd = idealEnd;
                     let changed = true;
                     let guard = 0;
@@ -4735,12 +4720,12 @@
                             }
                         }
                     }
-            
+
                     const sliceHeight = Math.max(minAdvance, chosenEnd - currentTop);
                     slices.push({ y: currentTop, height: sliceHeight });
                     currentTop += sliceHeight;
                 }
-            
+
                 return slices.length > 0 ? slices : [{ y: 0, height: Math.max(1, totalHeight) }];
             }
 
@@ -4774,9 +4759,7 @@
                     const printableW = Math.max(72, pageW - marginPt * 2);
                     const printableH = Math.max(72, pageH - marginPt * 2);
 
-                    // Render CSS width at standard 96 CSS px per inch (72 pt = 96 px)
                     const cssWidth = Math.round(printableW * (96 / 72));
-                    const pageContentHeightPx = printableH * (cssWidth / printableW);
 
                     const useLightTheme = opts.theme === 'light';
                     const previewStyles = getComputedStyle(preview);
@@ -4801,6 +4784,8 @@
 
                     const dims = await ensureTopPaddingForOverflow(clone);
                     const totalWidth = Math.max(cssWidth, dims.width);
+                    const totalHeight = Math.max(1, dims.height);
+                    const pageContentHeightPx = printableH * (totalWidth / printableW);
                     const lineBoxes = collectIndivisibleLineBoxes(clone);
                     const slices = computeSmartPageSlices(totalHeight, pageContentHeightPx, lineBoxes);
 
@@ -4932,9 +4917,11 @@
                ============================================================ */
             initFontPicker();
             initThemeToggle();
+            initPreviewZoomAndPan();
             initRenderToggle();
             initPdfModal();
             initAuth();
+
             notebooksMenuBtn.addEventListener('click', (event) => {
                 event.stopPropagation();
                 if (notebooksDropdown.hidden) {
@@ -4943,19 +4930,17 @@
                     closeNotebooksMenu();
                 }
             });
-            
+
             newNotebookBtn.addEventListener('click', (event) => {
                 event.stopPropagation();
                 createNotebook();
             });
-            
+
             document.addEventListener('mousedown', (event) => {
                 if (!notebooksDropdown.hidden && !notebooksMenuWrap.contains(event.target)) {
                     closeNotebooksMenu();
                 }
             });
-            
-            initPreviewZoomAndPan();
 
             editor.addEventListener('input', onEditorContentChanged);
 
@@ -5009,14 +4994,12 @@
                 if (acState.active) renderAutocompleteUI();
             });
 
-            // Re-render once deferred KaTeX scripts finish before DOMContentLoaded
             document.addEventListener('DOMContentLoaded', () => {
                 if (currentUser && isDocumentReady && isRenderEnabled) {
                     applyIncrementalPreviewRender(editor.value, true);
                 }
             });
 
-            // Flush unsaved edits locally & to cloud if the user hides or closes the page
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'hidden') {
                     flushLocalDraftSync();
@@ -5064,7 +5047,6 @@
                 }
             });
 
-            // Cross-tab local storage sync in the same browser
             window.addEventListener('storage', (event) => {
                 if (!currentUser || !isDocumentReady || hasUnresolvedConflict) return;
                 if (event.key === getLocalMetaKey(currentUser.id) && !hasUnsavedChanges && !isSavingToCloud) {
@@ -5091,6 +5073,7 @@
                     closePdfModal();
                     return;
                 }
+
                 if (event.key === 'Escape' && !notebooksDropdown.hidden) {
                     if (!document.activeElement || !document.activeElement.classList.contains('notebook-rename-input')) {
                         event.preventDefault();
@@ -5098,6 +5081,7 @@
                         return;
                     }
                 }
+
                 if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 's') {
                     event.preventDefault();
                     if (currentUser && !document.body.classList.contains('signed-out')) {
